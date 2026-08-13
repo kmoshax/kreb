@@ -1,0 +1,14 @@
+{
+	"name": "@kreb/raylib-sys",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./loader": "./src/loader.ts",
+		"./raylib-path": "./src/raylib-path.ts"
+	},
+	"scripts": {
+		"postinstall": "bun scripts/postinstall.ts",
+		"build:shim": "bun scripts/build-shim.ts"
+	}
+}

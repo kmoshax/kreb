@@ -1,6 +1,7 @@
-import { CString, dlopen, type FFIFunction, ptr } from 'bun:ffi';
+import { CString, type FFIFunction, ptr } from 'bun:ffi';
 import { beforeAll, expect, test } from 'bun:test';
 import { buildShim } from '../../scripts/build-shim.ts';
+import { loadShim } from '../../src/loader.ts';
 import { RAYLIB_VERSION } from '../../src/raylib-path.ts';
 
 const probeSource = new URL('../../native/abi_probe.c', import.meta.url).pathname;
@@ -34,11 +35,11 @@ const symbols = {
 	probe_raylib_version: { args: [], returns: 'ptr' },
 } satisfies Record<string, FFIFunction>;
 
-let raylib: ReturnType<typeof dlopen<typeof symbols>>['symbols'];
+let raylib: ReturnType<typeof loadShim<typeof symbols>>;
 
 beforeAll(async () => {
-	const { libPath } = await buildShim([probeSource], 'kreb_probe');
-	raylib = dlopen(libPath, symbols).symbols;
+	await buildShim([probeSource], 'kreb_probe');
+	raylib = loadShim('kreb_probe', symbols);
 });
 
 const floats = (length: number) => new Float32Array(length);

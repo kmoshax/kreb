@@ -3,6 +3,9 @@
 	"module": "src/index.ts",
 	"type": "module",
 	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
 		"check": "biome check",
 		"check:fix": "biome check --write",

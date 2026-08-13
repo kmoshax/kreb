@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run typecheck
+
+  shim:
+    name: shim (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            runner: ubuntu-latest
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+          - target: darwin-x64
+            runner: macos-13
+          - target: darwin-arm64
+            runner: macos-14
+          - target: win32-x64
+            runner: windows-latest
+          - target: win32-arm64
+            runner: windows-11-arm
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Set up MSVC
+        if: startsWith(matrix.target, 'win32')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.target == 'win32-arm64' && 'arm64' || 'x64' }}
+
+      # Downloads and checksum-verifies raylib for this target.
+      - run: bun install --frozen-lockfile
+
+      - run: bun run --filter @kreb/raylib-sys build:shim
+
+      # The struct-ABI probes are the reason this matrix exists: a prebuilt shim
+      # removes the TinyCC fault but does not prove raylib's struct layout
+      # matches expectations on aarch64 or Windows.
+      - name: Struct ABI probes
+        run: bun test packages/raylib-sys/test/nogl
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shim-${{ matrix.target }}
+          path: packages/raylib-sys/build/${{ matrix.target }}/
