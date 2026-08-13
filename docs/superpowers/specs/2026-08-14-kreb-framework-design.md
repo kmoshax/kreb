@@ -332,7 +332,7 @@ Phase 6 is the real milestone — the first point at which kreb is a thing rathe
 
 ## Risks
 
-1. **Binding phase 0 can invalidate the approach.** TinyCC's struct ABI on aarch64 and Windows is the largest unknown in the project. The fallback is prebuilt shims from CI, which costs a build matrix but preserves the design.
+1. **~~Binding phase 0 can invalidate the approach.~~ Resolved 2026-08-14.** TinyCC's struct ABI turned out to be broken on x86_64, not merely uncertain on aarch64 — it mishandles every struct containing floats and nearly every struct return, which covers `Vector2`, `Vector3`, and `Rectangle`. The prebuilt-shim fallback was taken and verified. The residual cost is a six-target CI build matrix; the framework design is unaffected. Details in the binding layer document.
 2. **No escape hatch makes coverage mandatory.** Custom shaders, render textures, blend modes, scissor, custom meshes, instancing, and skeletal animation must all ship as first-class API. This generates work continuously after v1 — it is a permanent tax rather than a phase.
 3. **The project is large.** Twelve phases, of which native UI and the full 3D API surface are each sizable on their own. The scope was chosen deliberately; it is recorded here so the timeline is not a surprise.
 

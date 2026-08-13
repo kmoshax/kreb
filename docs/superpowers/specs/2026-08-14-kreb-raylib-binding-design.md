@@ -1,7 +1,7 @@
 # kreb raylib binding layer — design
 
 **Date:** 2026-08-14
-**Status:** Approved, not yet implemented
+**Status:** Phase 0 complete. The runtime-compilation approach was tested and rejected; this document reflects the prebuilt-shim design that replaced it.
 **Scope:** Layer 0 of kreb — the FFI binding between Bun and raylib. The kreb game framework is designed separately in `2026-08-14-kreb-framework-design.md`.
 
 ## Purpose
@@ -16,22 +16,22 @@ That constraint sets the coverage requirement. Because users cannot reach past t
 
 raylib passes structs by value throughout its API — `Vector2`, `Vector3`, `Color`, `Rectangle`, `Camera2D`, `Camera3D`. Bun's `dlopen` supports only scalars and pointers. It cannot pass or return a struct by value, which rules out a direct `dlopen` binding for a large fraction of raylib.
 
-The solution is a C shim layer that flattens every struct into scalars or pointers at the JavaScript boundary. The shim is compiled at runtime by `cc` from `bun:ffi`, which uses TinyCC.
+The solution is a C shim layer that flattens every struct into scalars or pointers at the JavaScript boundary. The shim is compiled ahead of time by a real C compiler and loaded with `dlopen`. Compiling it at runtime with `cc` from `bun:ffi` was the original plan and was rejected in phase 0 — see the phase 0 outcome section below.
 
 ## Architecture
 
 ```
-vendor/raylib-api/*.json      pinned raylib 5.5 API description, committed
+vendor/raylib-api/*.json      pinned raylib 6.0 API description, committed
         │  codegen runs at development time; output is committed
         ▼
 native/kreb_shim.c            flat C wrappers — no struct-by-value at the JS boundary
 src/generated/*.ts            FFI symbol tables, typed wrappers, enums, constants
-        │  at import time
+        │  compiled per platform in CI by the system C compiler
         ▼
-cc({ source, library: ["raylib"], flags: ["-I…", "-L…"], symbols })
-        │  links against
+build/<platform>-<arch>/libkreb_raylib.so    shipped prebuilt
+        │  dlopen at import time; links against
         ▼
-~/.cache/kreb/raylib-5.5-<platform>/{include,lib}    fetched by postinstall
+~/.cache/kreb/raylib-6.0-<platform>-<arch>/{include,lib}   fetched by postinstall
 ```
 
 Codegen output is committed rather than generated at install time. Diffs are reviewable, installs stay offline apart from the raylib download, and a bad codegen change cannot silently break users.
@@ -60,29 +60,46 @@ Cameras are handles rather than value objects because raylib mutates them throug
 
 Struct returns unpack through one module-level scratch `Float32Array`. The shim writes into it and JavaScript reads the values out before any other call can run. This is safe because the runtime is single-threaded.
 
-## Runtime compilation
+## Phase 0 outcome: TinyCC rejected
 
-`cc` from `bun:ffi` accepts `source`, `library`, `flags`, `define`, and `symbols`. kreb compiles the shim on first import of the binding module, linking against the downloaded `libraylib` via `library: ["raylib"]` plus `-I` and `-L` flags pointing at the cache directory.
+The original design compiled the shim at import time with `cc` from `bun:ffi`, which uses TinyCC. Phase 0 tested that assumption before any other work, and it failed.
 
-TinyCC compiles quickly enough that a shim of this size adds only milliseconds to startup. If measurement later shows otherwise, the fallback is to precompile to a shared library using the system compiler when one is available and cache the result.
+Measured on Bun 1.3.14, GCC 16.2.1, raylib 6.0, linux x64. Ten probes covering every SysV AMD64 struct class were compiled both ways and diffed. GCC produced correct results throughout; TinyCC disagreed on eight of ten:
 
-## Primary risk: TinyCC struct ABI
+| Probe | Struct class | TinyCC | GCC |
+| --- | --- | --- | --- |
+| `GetColor` | 4-byte return, alone | agrees | agrees |
+| `ColorToInt` | 4-byte arg, alone | agrees | agrees |
+| `Fade` | 4-byte in and out plus float | `0x1fe0007f` | `0xff00007f` |
+| `ColorFromHSV` | floats in, 4-byte out | `0x000000ff` | `0xff0000ff` |
+| `ColorToHSV` | 12-byte SSE return | `[111.7, 1, 0.88]` | `[0, 1, 1]` |
+| `CheckCollisionRecs` | two 16-byte SSE args | `0` | `1` |
+| `GetCollisionRec` | 16-byte SSE return | `[0, 0, 0, 0]` | `[5, 5, 5, 5]` |
+| `CheckCollisionPointRec` | 8-byte and 16-byte SSE | `0` | `1` |
+| `GetWorldToScreen2D` | 24-byte MEMORY arg | `[NaN, NaN]` | `[120, 90]` |
+| `GetCameraMatrix` | 44-byte MEMORY in, 64-byte sret | all `NaN` | correct |
 
-Struct-by-value never reaches JavaScript, but it does cross the boundary between the TinyCC-compiled shim and the GCC- or Clang-compiled `libraylib`. TinyCC must implement SysV and AAPCS struct passing exactly. The x86_64 path is well exercised; aarch64 and Windows are considerably less proven.
+The result was reproduced with raylib removed entirely, calling a hand-written GCC shared library, which rules out a `raylib.h` parsing fault. In that isolated form TinyCC handled a 4-byte integer-class struct argument correctly and failed a 4-byte struct return, a 12-byte float struct return, two 16-byte float struct arguments, and an 8-byte float struct passed in and returned.
 
-Phase 0 exists to resolve this before any other work. It probes:
+The pattern: **TinyCC handles integer-class struct arguments and nothing else.** Structs containing floats are wrong in both directions, and struct returns are wrong generally. `Vector2`, `Vector3`, and `Rectangle` are the most-used types in raylib's API, so runtime compilation is unusable — and this was x86_64, TinyCC's best-supported target, so aarch64 and Windows could only be worse.
 
-- a shim function taking `Vector2` by value and echoing its components back
-- a shim function returning `Color` by value from raylib (`GetColor`, `Fade`)
-- `DrawRectangleRec` — `Rectangle` occupies two SSE registers while `Color` occupies one general-purpose register, which is the most demanding common case
+The documented contingency was taken. The same probe C compiled by the system compiler and loaded via `dlopen` passes all eleven assertions, so the fallback was verified in the same session rather than assumed. The codegen and TypeScript layers were unaffected, exactly as the risk analysis predicted.
 
-Phase 0 also verifies, rather than assumes, that raylib's GitHub releases publish assets for every target platform. If a `linux_arm64` asset does not exist, that platform needs a source build or is dropped from v1.
+These probes are retained permanently as `test/nogl/abi.test.ts`, now run against the prebuilt path. A raylib version bump can change a struct layout silently and nothing else in the suite would catch it.
 
-If the probes fail on a platform that matters, the fallback is prebuilt shims produced by CI for that platform only. The codegen and TypeScript layers are unaffected either way, which is what makes the risk survivable rather than fatal.
+## Build and distribution
+
+`scripts/build-shim.ts` compiles `native/*.c` into a single shared library per platform, linking raylib with an rpath pointing at the cache directory so the loader resolves `libraylib` without the caller setting `LD_LIBRARY_PATH` before process start. It skips the compile when the output is newer than every input.
+
+CI runs this once per platform and architecture. The resulting binaries ship as `optionalDependencies` — one package per target, the pattern esbuild and sharp use — so users need no toolchain. Locally the script runs on demand for development and tests, which does require a system compiler; that requirement applies to contributors only, never to users.
+
+Targets: `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64`, `win32-arm64`.
 
 ## raylib acquisition
 
-A postinstall script downloads the official raylib release archive for the current platform and architecture, verifies it against a pinned SHA-256, and unpacks `include/` and `lib/` into `~/.cache/kreb/raylib-<version>-<platform>/`. The version is pinned in the repository alongside the vendored API JSON.
+A postinstall script downloads the official raylib release archive for the current platform and architecture, verifies it against a pinned SHA-256, and unpacks `include/` and `lib/` into `~/.cache/kreb/raylib-<version>-<platform>-<arch>/`. The version is pinned in `src/raylib-path.ts` alongside the vendored API JSON.
+
+raylib 6.0 is the pinned version. Its release assets were checked during phase 0 and cover every target: `linux_amd64`, `linux_arm64`, `macos` (universal), `win64_msvc16`, `win32_msvc16`, and `winarm64_msvc16`. The `linux_arm64` question raised in the original design is resolved — the asset exists, so no platform needs a source build.
 
 A test asserts that the downloaded raylib's `RAYLIB_VERSION` matches the vendored API description. Silent skew between the two would produce incorrect struct layouts with no error, which is the worst available failure mode.
 
@@ -129,12 +146,15 @@ packages/raylib-sys/
   native/
     kreb_shim.c        GENERATED, committed
     abi_probe.c        hand-written, phase 0, retained as regression tests
+  build/<platform>-<arch>/libkreb_raylib.<so|dylib|dll>   built by CI, shipped
   src/
-    loader.ts          locate raylib, invoke cc, cache the handle
+    raylib-path.ts     pinned version, cache location
+    loader.ts          locate the prebuilt shim, dlopen, cache the handle
     handles.ts         handle base class, dispose, use-after-free guard
     scratch.ts         shared struct-return buffer
     generated/raylib.ts, enums.ts, colors.ts
   scripts/
+    build-shim.ts      compile native/*.c with the system compiler
     postinstall.ts     download and verify the raylib release
     codegen.ts
   test/codegen/  test/nogl/  test/gl/
@@ -156,8 +176,8 @@ macOS and Windows CI run the codegen and nogl tiers only. Headless OpenGL on tho
 
 | Phase | Deliverable | Complete when |
 | --- | --- | --- |
-| 0 | ABI spike: `abi_probe.c`, manual `cc` invocation, platform asset check | struct round-trips are correct on target platforms, or a fallback decision is documented |
-| 1 | `postinstall.ts` and `loader.ts` | a clean machine installs raylib into the cache and `cc` links against it |
+| 0 | **Done.** ABI spike, platform asset check, TinyCC rejected, prebuilt path verified | struct round-trips correct on the prebuilt path; 11 of 11 probes pass on linux-x64 |
+| 1 | `postinstall.ts`, `loader.ts`, CI build matrix | a clean machine installs raylib and loads a prebuilt shim with no toolchain present |
 | 2 | Hand-written shim of roughly 15 functions: window, input, `ClearBackground`, `DrawText`, `DrawCircleV` | a window opens, text renders, Escape closes it |
 | 3 | Codegen replaces the hand-written shim; full `raylib.h` | generated output passes phase 2's tests unchanged |
 | 4 | Resource handles | textures, models, and audio load, draw, and dispose; use after dispose throws |
@@ -168,4 +188,9 @@ Phase 2 exists separately from phase 3 deliberately. It is cheap, and it means t
 
 ## Open items
 
-None. Phase 0's outcome may force the prebuilt-shim fallback, which is a documented contingency rather than an unresolved question.
+Phase 0 is resolved and the design updated accordingly. Two items move into phase 1:
+
+- **CI build matrix.** Six targets need runners or cross-compilation. `darwin-arm64` and `win32-arm64` in particular need confirmed runner availability.
+- **`optionalDependencies` packaging.** Per-platform packages need names, a publish flow, and a resolution failure message that tells the user which platform was unsupported rather than surfacing a bare module-not-found.
+
+The struct-ABI probes were only run on linux-x64. They must run on every target in CI before v1 — a prebuilt shim removes the TinyCC fault but does not by itself prove raylib's struct layout matches expectations on aarch64 or Windows.
