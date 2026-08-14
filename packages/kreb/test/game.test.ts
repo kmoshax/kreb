@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { buildShim } from '@kreb/raylib-sys/build';
-import type { Draw2D, Draw3D, DrawUI } from '../src/index.ts';
+import type { Collider, Draw2D, Draw3D, DrawUI } from '../src/index.ts';
 
 type Kreb = typeof import('../src/index.ts');
 type Sys = typeof import('@kreb/raylib-sys');
@@ -128,6 +128,37 @@ test('many frames run without error', () => {
 	}
 
 	expect(game.scenes.depth).toBe(1);
+});
+
+test('collision runs inside the fixed step and fires callbacks', () => {
+	const touched: string[] = [];
+
+	class Pickup extends k.BoxCollider2D {
+		override onEnter(other: Collider): void {
+			touched.push(other.name);
+		}
+	}
+
+	class Walker extends k.BoxCollider2D {
+		override update(dt: number): void {
+			this.position.x += 400 * dt;
+		}
+	}
+
+	class Field extends k.Scene {
+		override ready(): void {
+			this.add(new Pickup({ x: 20, y: 20 }, {}, 'pickup')).position.set({ x: 60, y: 0 });
+			this.add(new Walker({ x: 20, y: 20 }, {}, 'walker'));
+		}
+	}
+
+	game.scenes.push(new Field('field'));
+
+	for (let i = 0; i < 20; i += 1) game.update(1 / 60);
+
+	expect(touched).toEqual(['walker']);
+
+	game.scenes.pop();
 });
 
 test('pushing a scene overlays it and popping restores the one below', () => {

@@ -9,6 +9,26 @@ export { AssetCache, type AssetLoader, type Loaded } from './assets/cache.ts';
 export { AssetKind, type AssetRef } from './assets/kinds.ts';
 export { AssetQueue, type LoadProgress } from './assets/queue.ts';
 export { AssetScope } from './assets/scope.ts';
+export {
+	BoxCollider2D,
+	BoxCollider3D,
+	CircleCollider2D,
+	type Collider,
+	Collider2D,
+	Collider3D,
+	type ColliderOptions,
+	isCollider,
+	SphereCollider3D,
+} from './collision/collider.ts';
+export { ALL_LAYERS, DEFAULT_LAYER, layer, layers } from './collision/layers.ts';
+export { SpatialHash } from './collision/spatial-hash.ts';
+export type { Bounds, Volume } from './collision/volume.ts';
+export {
+	CollisionWorld,
+	type Overlap,
+	type QueryOptions,
+	type RayHit,
+} from './collision/world.ts';
 export { Camera2D, Camera3D, Projection } from './core/camera.ts';
 export { Loop } from './core/loop.ts';
 export { Node, RenderSpace } from './core/node.ts';

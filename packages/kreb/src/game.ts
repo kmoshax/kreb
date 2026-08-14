@@ -90,7 +90,13 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 
 	/** @internal */
 	update(dt: number): void {
-		this.scenes.active.updateTree(dt);
+		const scene = this.scenes.active;
+
+		scene.updateTree(dt);
+
+		// After movement, so callbacks see the positions the step produced.
+		scene.collisions.collect(scene);
+		scene.collisions.step();
 	}
 
 	/** @internal */

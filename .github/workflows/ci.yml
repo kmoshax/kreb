@@ -69,7 +69,7 @@ jobs:
         run: bun test packages/kreb-math
 
       - name: Framework logic
-        run: bun test packages/kreb/test/core.test.ts packages/kreb/test/assets.test.ts packages/kreb/test/cli.test.ts packages/kreb/test/input.test.ts
+        run: bun test packages/kreb/test/core.test.ts packages/kreb/test/assets.test.ts packages/kreb/test/cli.test.ts packages/kreb/test/input.test.ts packages/kreb/test/collision.test.ts
 
       - name: GL tests
         if: startsWith(matrix.target, 'linux')

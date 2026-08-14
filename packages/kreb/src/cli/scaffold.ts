@@ -3,26 +3,19 @@ export type ScaffoldFile = {
 	contents: string;
 };
 
-const MAIN = `import { actions, Anchor, axis2, game, input, Key, Node2D, NodeUI, Scene } from 'kreb';
+const MAIN = `import { Anchor, game, Node2D, NodeUI, Scene } from 'kreb';
 import type { Draw2D, DrawUI } from 'kreb';
 
 const WIDTH = 960;
 const HEIGHT = 540;
 
-const Act = actions({
-	move: axis2({ up: Key.KEY_W, down: Key.KEY_S, left: Key.KEY_A, right: Key.KEY_D }),
-	boost: Key.KEY_SPACE,
-});
-
 class Player extends Node2D {
 	speed = 260;
 
 	override update(dt: number): void {
-		const direction = input.axis(Act.move);
-		const speed = input.held(Act.boost) ? this.speed * 2.5 : this.speed;
+		this.position.x += this.speed * dt;
 
-		this.position.x += direction.x * speed * dt;
-		this.position.y += direction.y * speed * dt;
+		if (this.position.x > WIDTH || this.position.x < 0) this.speed *= -1;
 	}
 
 	override draw(g: Draw2D): void {
@@ -32,7 +25,7 @@ class Player extends Node2D {
 
 class Hud extends NodeUI {
 	override draw(g: DrawUI): void {
-		g.text('WASD to move, space to boost', 0, 0, { size: 20, color: 0x000000ff });
+		g.text('hello from kreb', 0, 0, { size: 20, color: 0x000000ff });
 	}
 }
 
@@ -43,7 +36,7 @@ class Level extends Scene {
 
 		const hud = this.add(new Hud('hud'));
 		hud.anchor = Anchor.TopLeft;
-		hud.offset = { x: 16, y: 16, width: 320, height: 24 };
+		hud.offset = { x: 16, y: 16, width: 240, height: 24 };
 	}
 }
 

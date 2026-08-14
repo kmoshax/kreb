@@ -1,7 +1,7 @@
 # kreb game framework — design
 
 **Date:** 2026-08-14
-**Status:** Approved. Phases 5-8 complete; phases 9-12 not yet started.
+**Status:** Approved. Phases 5-9 complete; phases 10-12 not yet started.
 **Scope:** The kreb framework itself. The raylib FFI layer beneath it is designed separately in `2026-08-14-kreb-raylib-binding-design.md`.
 
 ## What kreb is
@@ -326,7 +326,7 @@ Binding phases 0 through 4 are specified in the binding layer design document. F
 | 6 | **Done.** Core: loop, nodes, transforms, render passes, draw contexts, scenes | demo runs a bouncing sprite, two orbiting 3D cubes and a HUD in one frame; 30 framework tests |
 | 7 | **Done.** Assets, CLI, typed manifest | `kreb new` scaffolds, `kreb build` generates the manifest, `kreb dev`/`run` launch through the framework's own runner; verified end to end outside the repo |
 | 8 | **Done.** Input actions and edge latching | a press reaches exactly one fixed step at 30fps, and an edge seen during a stepless frame is carried rather than dropped |
-| 9 | Collision | 2D and 3D queries, callbacks, and layers |
+| 9 | **Done.** Collision | 2D and 3D overlap, raycast and layer masks share one dimension-agnostic implementation; enter/exit callbacks fire from inside the fixed step |
 | 10 | Native UI | the demo has a menu and a settings screen |
 | 11 | Extras | tweens, timers, particles, FSM |
 | 12 | Documentation, examples, publish | |

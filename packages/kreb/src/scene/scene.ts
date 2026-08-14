@@ -1,5 +1,6 @@
 import { AssetCache } from '../assets/cache.ts';
 import { AssetScope } from '../assets/scope.ts';
+import { CollisionWorld } from '../collision/world.ts';
 import type { Camera2D, Camera3D } from '../core/camera.ts';
 import { Node } from '../core/node.ts';
 
@@ -11,6 +12,7 @@ export class Scene extends Node {
 	camera3d: Camera3D | null = null;
 
 	readonly assets = new AssetScope(assetCache);
+	readonly collisions = new CollisionWorld();
 
 	/** Runs once when the scene becomes active, before its first update. */
 	override ready(): void {}
