@@ -5,6 +5,9 @@ export type LoopOptions = {
 };
 
 export type LoopCallbacks = {
+	/** Once per rendered frame, before any fixed step runs. */
+	beginFrame?: () => void;
+	beginStep?: () => void;
 	update: (dt: number) => void;
 	render: (alpha: number) => void;
 	shouldStop: () => boolean;
@@ -52,9 +55,14 @@ export class Loop {
 
 	run(callbacks: LoopCallbacks): void {
 		while (!callbacks.shouldStop()) {
+			callbacks.beginFrame?.();
+
 			const steps = this.advance(callbacks.frameTime());
 
-			for (let i = 0; i < steps; i += 1) callbacks.update(this.step);
+			for (let i = 0; i < steps; i += 1) {
+				callbacks.beginStep?.();
+				callbacks.update(this.step);
+			}
 
 			callbacks.render(this.alpha);
 		}

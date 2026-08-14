@@ -4,6 +4,7 @@ import { Loop } from './core/loop.ts';
 import type { Rect } from './core/node-ui.ts';
 import { RenderQueue } from './core/render-queue.ts';
 import { Draw2DContext, Draw3DContext, DrawUIContext } from './draw/contexts.ts';
+import { input } from './input/input.ts';
 import type { Scene } from './scene/scene.ts';
 import { SceneManager } from './scene/scene.ts';
 
@@ -50,6 +51,8 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 			this.#loop.run({
 				shouldStop: () => rl.WindowShouldClose(),
 				frameTime: () => rl.GetFrameTime(),
+				beginFrame: () => input.beginFrame(),
+				beginStep: () => input.beginStep(),
 				update: (dt) => this.update(dt),
 				render: () => this.render(),
 			});

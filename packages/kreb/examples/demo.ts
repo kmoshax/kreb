@@ -9,6 +9,10 @@ await buildShim(
 );
 
 const {
+	actions,
+	axis2,
+	input,
+	Key,
 	Anchor,
 	Camera2D,
 	Camera3D,
@@ -26,6 +30,12 @@ const {
 const { DARKBLUE, GOLD, MAROON, RAYWHITE, SKYBLUE, WHITE } = await import(
 	'@kreb/raylib-sys/colors'
 );
+
+const Act = actions({
+	move: axis2({ up: Key.KEY_W, down: Key.KEY_S, left: Key.KEY_A, right: Key.KEY_D }),
+	boost: Key.KEY_LEFT_SHIFT,
+	jump: Key.KEY_SPACE,
+});
 
 const WIDTH = 960;
 const HEIGHT = 540;
@@ -75,12 +85,23 @@ class Player extends Node2D {
 
 	readonly #velocity = { x: 220, y: 160 };
 
-	override update(dt: number): void {
-		this.position.x += this.#velocity.x * dt;
-		this.position.y += this.#velocity.y * dt;
+	#driven = false;
 
-		if (this.position.x < 0 || this.position.x > WIDTH - 48) this.#velocity.x *= -1;
-		if (this.position.y < 0 || this.position.y > HEIGHT - 48) this.#velocity.y *= -1;
+	override update(dt: number): void {
+		const direction = input.axis(Act.move);
+
+		if (direction.x !== 0 || direction.y !== 0) {
+			this.#driven = true;
+			const speed = input.held(Act.boost) ? 720 : 320;
+			this.position.x += direction.x * speed * dt;
+			this.position.y += direction.y * speed * dt;
+		} else if (!this.#driven) {
+			this.position.x += this.#velocity.x * dt;
+			this.position.y += this.#velocity.y * dt;
+
+			if (this.position.x < 0 || this.position.x > WIDTH - 48) this.#velocity.x *= -1;
+			if (this.position.y < 0 || this.position.y > HEIGHT - 48) this.#velocity.y *= -1;
+		}
 
 		this.rotation += dt;
 	}
@@ -99,15 +120,17 @@ class Trail extends Node2D {
 
 class Hud extends NodeUI {
 	frames = 0;
+	jumps = 0;
 
 	override update(): void {
 		this.frames += 1;
+		if (input.pressed(Act.jump)) this.jumps += 1;
 	}
 
 	override draw(g: DrawUI): void {
 		g.rect(0, 0, 240, 58, { color: DARKBLUE });
-		g.text('kreb — phase 6', 10, 8, { size: 20, color: RAYWHITE });
-		g.text(`${this.frames} fixed steps`, 10, 32, { size: 16, color: WHITE });
+		g.text('WASD · shift · space', 10, 8, { size: 20, color: RAYWHITE });
+		g.text(`${this.frames} steps · ${this.jumps} jumps`, 10, 32, { size: 16, color: WHITE });
 	}
 }
 

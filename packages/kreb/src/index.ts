@@ -1,4 +1,10 @@
 export { Image, Mesh, Model, Shader, Texture } from '@kreb/raylib-sys';
+export {
+	GamepadAxis,
+	GamepadButton,
+	KeyboardKey as Key,
+	MouseButton,
+} from '@kreb/raylib-sys/enums';
 export { AssetCache, type AssetLoader, type Loaded } from './assets/cache.ts';
 export { AssetKind, type AssetRef } from './assets/kinds.ts';
 export { AssetQueue, type LoadProgress } from './assets/queue.ts';
@@ -21,4 +27,18 @@ export type {
 	TextOptions,
 } from './draw/context.ts';
 export { Game, type GameOptions, game, type WindowOptions } from './game.ts';
+export {
+	type Action,
+	type Axis2Action,
+	actions,
+	axis2,
+	type Binding,
+	type ButtonAction,
+	key,
+	mouse,
+	pad,
+	stick,
+} from './input/bindings.ts';
+export { type InputDevice, raylibDevice } from './input/device.ts';
+export { Input, type InputOptions, input } from './input/input.ts';
 export { assetCache, Scene, SceneManager } from './scene/scene.ts';
