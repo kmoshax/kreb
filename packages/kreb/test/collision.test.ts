@@ -5,13 +5,13 @@ import {
 	CircleCollider2D,
 	type Collider,
 	SphereCollider3D,
-} from '../src/collision/collider.ts';
-import { interested, layer, layers } from '../src/collision/layers.ts';
-import { SpatialHash } from '../src/collision/spatial-hash.ts';
-import { overlaps, rayBox, raySphere } from '../src/collision/volume.ts';
-import { CollisionWorld } from '../src/collision/world.ts';
-import { Node2D } from '../src/core/node-2d.ts';
-import { Node3D } from '../src/core/node-3d.ts';
+} from 'kreb/collision/collider';
+import { interested, layer, layers } from 'kreb/collision/layers';
+import { SpatialHash } from 'kreb/collision/spatial-hash';
+import { overlaps, rayBox, raySphere } from 'kreb/collision/volume';
+import { CollisionWorld } from 'kreb/collision/world';
+import { Node2D } from 'kreb/core/node-2d';
+import { Node3D } from 'kreb/core/node-3d';
 
 const Layer = {
 	Player: layer(0),

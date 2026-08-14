@@ -1,10 +1,9 @@
 import { CString, type FFIFunction, ptr } from 'bun:ffi';
 import { beforeAll, expect, test } from 'bun:test';
-import { buildShim } from '../../scripts/build-shim.ts';
-import { loadShim } from '../../src/loader.ts';
-import { RAYLIB_VERSION } from '../../src/raylib-path.ts';
-
-const probeSource = new URL('../../native/abi_probe.c', import.meta.url).pathname;
+import { buildShim } from '@kreb/raylib-sys/build';
+import { loadShim } from '@kreb/raylib-sys/loader';
+import { RAYLIB_VERSION } from '@kreb/raylib-sys/raylib-path';
+import { ABI_PROBE_SOURCE } from '@kreb/raylib-sys/shim-path';
 
 const symbols = {
 	probe_ret4_GetColor: { args: ['u32'], returns: 'u32' },
@@ -38,7 +37,7 @@ const symbols = {
 let raylib: ReturnType<typeof loadShim<typeof symbols>>;
 
 beforeAll(async () => {
-	await buildShim([probeSource], 'kreb_probe');
+	await buildShim([ABI_PROBE_SOURCE], 'kreb_probe');
 	raylib = loadShim('kreb_probe', symbols);
 });
 

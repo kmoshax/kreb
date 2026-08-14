@@ -5,7 +5,8 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
-		"./cli": "./src/cli/index.ts"
+		"./cli": "./src/cli/index.ts",
+		"./*": "./src/*.ts"
 	},
 	"dependencies": {
 		"@kreb/math": "workspace:*",

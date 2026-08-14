@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
-import { RAYLIB_VERSION } from '../../src/raylib-path.ts';
-import { currentTarget, currentTargetKey, TARGETS } from '../../src/targets.ts';
+import { RAYLIB_VERSION } from '@kreb/raylib-sys/raylib-path';
+import { currentTarget, currentTargetKey, TARGETS } from '@kreb/raylib-sys/targets';
 
 const SUPPORTED = [
 	'linux-x64',

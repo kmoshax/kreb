@@ -37,6 +37,11 @@ export class SceneManager {
 		return this.#stack.length;
 	}
 
+	/** Bottom to top. Only the top scene updates; all of them draw. */
+	get stack(): readonly Scene[] {
+		return this.#stack;
+	}
+
 	/** Replaces the whole stack, tearing down every scene currently on it. */
 	change(scene: Scene): void {
 		while (this.#stack.length > 0) this.pop();

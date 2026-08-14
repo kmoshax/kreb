@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { copyFile, mkdir } from 'node:fs/promises';
 import { $ } from 'bun';
 import { raylibPaths } from '../src/raylib-path.ts';
-import { buildDir, shimPath } from '../src/shim-path.ts';
+import { ABI_PROBE_SOURCE, buildDir, shimPath } from '../src/shim-path.ts';
 
 export type ShimBuild = {
 	libPath: string;
@@ -75,8 +75,7 @@ async function isUpToDate(libPath: string, sources: string[]): Promise<boolean> 
 }
 
 if (import.meta.main) {
-	const probe = new URL('../native/abi_probe.c', import.meta.url).pathname;
-	const { libPath, compiled } = await buildShim([probe], 'kreb_probe', { force: true });
+	const { libPath, compiled } = await buildShim([ABI_PROBE_SOURCE], 'kreb_probe', { force: true });
 
 	console.log(`${compiled ? 'built' : 'up to date'}: ${libPath}`);
 }

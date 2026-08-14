@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
-import { actions, axis2, mouse, pad, stick } from '../src/input/bindings.ts';
-import type { InputDevice } from '../src/input/device.ts';
-import { Input } from '../src/input/input.ts';
+import { actions, axis2, mouse, pad, stick } from 'kreb/input/bindings';
+import type { InputDevice } from 'kreb/input/device';
+import { Input } from 'kreb/input/input';
 
 const KEY_SPACE = 32;
 const KEY_W = 87;

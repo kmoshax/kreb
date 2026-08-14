@@ -2,7 +2,8 @@
 // first and the module imported dynamically.
 
 import { afterAll, beforeAll, expect, test } from 'bun:test';
-import { buildShim } from '../../scripts/build-shim.ts';
+import { buildShim } from '@kreb/raylib-sys/build';
+import { SHIM_SOURCE } from '@kreb/raylib-sys/shim-path';
 
 const WIDTH = 320;
 const HEIGHT = 240;
@@ -17,8 +18,7 @@ let rl: Bindings;
 let colors: Colors;
 
 beforeAll(async () => {
-	const source = new URL('../../native/kreb_shim.c', import.meta.url).pathname;
-	await buildShim([source], 'kreb_raylib');
+	await buildShim([SHIM_SOURCE], 'kreb_raylib');
 
 	rl = await import('@kreb/raylib-sys/raylib');
 	colors = await import('@kreb/raylib-sys/colors');

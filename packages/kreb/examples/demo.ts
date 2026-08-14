@@ -1,14 +1,18 @@
 // Manual check: bun packages/kreb/examples/demo.ts
 
 import { buildShim } from '@kreb/raylib-sys/build';
-import type { Draw2D, Draw3D, DrawUI } from '../src/index.ts';
+import { SHIM_SOURCE } from '@kreb/raylib-sys/shim-path';
+import type { Draw2D, Draw3D, DrawUI } from 'kreb';
 
-await buildShim(
-	[new URL('../../raylib-sys/native/kreb_shim.c', import.meta.url).pathname],
-	'kreb_raylib',
-);
+await buildShim([SHIM_SOURCE], 'kreb_raylib');
 
 const {
+	Button,
+	Checkbox,
+	Label,
+	Panel,
+	Slider,
+	TextInput,
 	actions,
 	axis2,
 	input,
@@ -25,7 +29,7 @@ const {
 	NodeUI,
 	Scene,
 	Texture,
-} = await import('../src/index.ts');
+} = await import('kreb');
 
 const { DARKBLUE, GOLD, MAROON, RAYWHITE, SKYBLUE, WHITE } = await import(
 	'@kreb/raylib-sys/colors'
@@ -54,7 +58,7 @@ class Cube extends Node3D {
 	}
 
 	override update(dt: number): void {
-		this.#spin += this.speed * dt;
+		this.#spin += this.speed * cubeSpeed * dt;
 
 		this.position.set({
 			x: Math.cos(this.#spin) * this.orbit,
@@ -73,6 +77,8 @@ class Cube extends Node3D {
 
 class Ground extends Node3D {
 	override draw(g: Draw3D): void {
+		if (!showGrid) return;
+
 		for (let i = -5; i <= 5; i += 1) {
 			g.line({ x: i, y: 0, z: -5 }, { x: i, y: 0, z: 5 }, { color: DARKBLUE });
 			g.line({ x: -5, y: 0, z: i }, { x: 5, y: 0, z: i }, { color: DARKBLUE });
@@ -130,9 +136,52 @@ class Hud extends NodeUI {
 	override draw(g: DrawUI): void {
 		g.rect(0, 0, 240, 58, { color: DARKBLUE });
 		g.text('WASD · shift · space', 10, 8, { size: 20, color: RAYWHITE });
-		g.text(`${this.frames} steps · ${this.jumps} jumps`, 10, 32, { size: 16, color: WHITE });
+		g.text(`${playerName} · ${this.jumps} jumps`, 10, 32, { size: 16, color: WHITE });
 	}
 }
+
+class Settings extends Scene {
+	onClose: () => void = () => {};
+
+	override ready(): void {
+		const panel = this.add(new Panel('panel'));
+		panel.anchor = Anchor.Center;
+		panel.offset = { x: -200, y: -160, width: 400, height: 320 };
+
+		const title = panel.add(new Label('Settings', 'title'));
+		title.offset = { x: 24, y: 20, width: 200, height: 28 };
+
+		const fullscreen = panel.add(new Checkbox('Grid overlay', true, 'grid'));
+		fullscreen.offset = { x: 24, y: 70, width: 320, height: 28 };
+		fullscreen.onChange = (on) => {
+			showGrid = on;
+		};
+
+		const volumeLabel = panel.add(new Label('Cube speed', 'volumeLabel'));
+		volumeLabel.muted = true;
+		volumeLabel.offset = { x: 24, y: 118, width: 200, height: 24 };
+
+		const speed = panel.add(new Slider(cubeSpeed, 0, 3, 'speed'));
+		speed.offset = { x: 24, y: 146, width: 352, height: 24 };
+		speed.onChange = (value) => {
+			cubeSpeed = value;
+		};
+
+		const name = panel.add(new TextInput(playerName, 'name'));
+		name.placeholder = 'player name';
+		name.offset = { x: 24, y: 190, width: 352, height: 32 };
+		name.onChange = (value) => {
+			playerName = value;
+		};
+
+		const close = panel.add(new Button('Close', () => this.onClose(), 'close'));
+		close.offset = { x: 24, y: 248, width: 352, height: 40 };
+	}
+}
+
+let showGrid = true;
+let cubeSpeed = 1.1;
+let playerName = 'kreb';
 
 class Level extends Scene {
 	override ready(): void {
@@ -154,11 +203,23 @@ class Level extends Scene {
 		const hud = this.add(new Hud('hud'));
 		hud.anchor = Anchor.TopLeft;
 		hud.offset = { x: 12, y: 12, width: 240, height: 58 };
+
+		const open = this.add(
+			new Button('Settings', () => {
+				const settings = new Settings('settings');
+				settings.onClose = () => running.scenes.pop();
+				running.scenes.push(settings);
+			}),
+		);
+		open.anchor = Anchor.TopRight;
+		open.offset = { x: -152, y: 12, width: 140, height: 36 };
 	}
 }
 
-game({
+const running = game({
 	window: { width: WIDTH, height: HEIGHT, title: 'kreb', targetFps: 60 },
 	scenes: { level: Level },
 	start: 'level',
-}).run();
+});
+
+running.run();

@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { newProject, run } from '../src/cli/index.ts';
-import { scaffold } from '../src/cli/scaffold.ts';
-import { writeManifest } from '../src/cli/scan.ts';
+import { newProject, run } from 'kreb/cli/index';
+import { scaffold } from 'kreb/cli/scaffold';
+import { writeManifest } from 'kreb/cli/scan';
 
 let workspace: string;
 const originalCwd = process.cwd();

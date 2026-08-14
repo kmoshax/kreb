@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
-import { AssetCache, type AssetLoader } from '../src/assets/cache.ts';
-import { AssetKind, type AssetRef, kindFor } from '../src/assets/kinds.ts';
-import { keyFor, planManifest, renderManifest } from '../src/assets/manifest.ts';
-import { AssetQueue } from '../src/assets/queue.ts';
-import { AssetScope } from '../src/assets/scope.ts';
+import { AssetCache, type AssetLoader } from 'kreb/assets/cache';
+import { AssetKind, type AssetRef, kindFor } from 'kreb/assets/kinds';
+import { keyFor, planManifest, renderManifest } from 'kreb/assets/manifest';
+import { AssetQueue } from 'kreb/assets/queue';
+import { AssetScope } from 'kreb/assets/scope';
 
 type Fake = { path: string; disposed: boolean; dispose(): void };
 

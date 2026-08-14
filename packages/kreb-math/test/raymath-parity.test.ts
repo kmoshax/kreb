@@ -7,6 +7,7 @@ import * as km from '@kreb/math';
 import type { Matrix, Quaternion, Vector2, Vector3 } from '@kreb/math/types';
 import { buildShim } from '@kreb/raylib-sys/build';
 import { loadShim } from '@kreb/raylib-sys/loader';
+import { RAYMATH_PROBE_SOURCE } from '@kreb/raylib-sys/shim-path';
 
 const f = 'f32';
 const p = 'ptr';
@@ -84,8 +85,7 @@ const out = new Float32Array(16);
 const outPtr = ptr(out);
 
 beforeAll(async () => {
-	const source = new URL('../../raylib-sys/native/raymath_probe.c', import.meta.url).pathname;
-	await buildShim([source], 'kreb_raymath_probe');
+	await buildShim([RAYMATH_PROBE_SOURCE], 'kreb_raymath_probe');
 
 	c = loadShim('kreb_raymath_probe', symbols);
 });

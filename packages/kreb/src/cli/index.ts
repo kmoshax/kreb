@@ -1,9 +1,9 @@
 import { mkdir } from 'node:fs/promises';
 import { buildShim } from '@kreb/raylib-sys/build';
+import { SHIM_SOURCE } from '@kreb/raylib-sys/shim-path';
 import { scaffold } from './scaffold.ts';
 import { writeManifest } from './scan.ts';
 
-const SHIM_SOURCE = new URL('../../../raylib-sys/native/kreb_shim.c', import.meta.url).pathname;
 const SHIM_NAME = 'kreb_raylib';
 
 const ASSETS_DIRECTORY = 'assets';

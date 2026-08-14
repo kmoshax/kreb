@@ -1,10 +1,11 @@
 import { afterAll, beforeAll, expect, test } from 'bun:test';
-import { buildShim } from '../../scripts/build-shim.ts';
+import { buildShim } from '@kreb/raylib-sys/build';
+import { SHIM_SOURCE } from '@kreb/raylib-sys/shim-path';
 
 const FLAG_WINDOW_HIDDEN = 0x00000080;
 const LOG_WARNING = 4;
 
-type Handles = typeof import('../../src/handles.ts');
+type Handles = typeof import('@kreb/raylib-sys/handles');
 type Bindings = typeof import('@kreb/raylib-sys/raylib');
 type Colors = typeof import('@kreb/raylib-sys/colors');
 
@@ -13,12 +14,11 @@ let rl: Bindings;
 let colors: Colors;
 
 beforeAll(async () => {
-	const source = new URL('../../native/kreb_shim.c', import.meta.url).pathname;
-	await buildShim([source], 'kreb_raylib');
+	await buildShim([SHIM_SOURCE], 'kreb_raylib');
 
 	rl = await import('@kreb/raylib-sys/raylib');
 	colors = await import('@kreb/raylib-sys/colors');
-	h = await import('../../src/handles.ts');
+	h = await import('@kreb/raylib-sys/handles');
 
 	rl.SetTraceLogLevel(LOG_WARNING);
 	rl.SetConfigFlags(FLAG_WINDOW_HIDDEN);

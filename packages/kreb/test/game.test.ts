@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { buildShim } from '@kreb/raylib-sys/build';
-import type { Collider, Draw2D, Draw3D, DrawUI } from '../src/index.ts';
+import { SHIM_SOURCE } from '@kreb/raylib-sys/shim-path';
+import type { Collider, Draw2D, Draw3D, DrawUI } from 'kreb';
 
-type Kreb = typeof import('../src/index.ts');
+type Kreb = typeof import('kreb');
 type Sys = typeof import('@kreb/raylib-sys');
 type Colors = typeof import('@kreb/raylib-sys/colors');
 
@@ -16,10 +17,9 @@ const HEIGHT = 240;
 const drawn: string[] = [];
 
 beforeAll(async () => {
-	const source = new URL('../../raylib-sys/native/kreb_shim.c', import.meta.url).pathname;
-	await buildShim([source], 'kreb_raylib');
+	await buildShim([SHIM_SOURCE], 'kreb_raylib');
 
-	k = await import('../src/index.ts');
+	k = await import('kreb');
 	sys = await import('@kreb/raylib-sys');
 	colors = await import('@kreb/raylib-sys/colors');
 });

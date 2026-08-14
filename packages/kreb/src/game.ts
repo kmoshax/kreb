@@ -105,15 +105,21 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 
 	/** @internal */
 	render(): void {
-		const scene = this.scenes.active;
-
-		this.#queue.collect(scene);
-		this.#queue.sort(scene.camera3d?.globalPosition ?? null);
-
 		const viewport = this.viewport();
 
 		rl.BeginDrawing();
 		rl.ClearBackground(this.#options.clearColor ?? RAYWHITE);
+
+		// Every scene on the stack draws, so a pushed pause menu overlays the
+		// level rather than replacing it.
+		for (const scene of this.scenes.stack) this.#renderScene(scene, viewport);
+
+		rl.EndDrawing();
+	}
+
+	#renderScene(scene: Scene, viewport: Rect): void {
+		this.#queue.collect(scene);
+		this.#queue.sort(scene.camera3d?.globalPosition ?? null);
 
 		if (scene.camera3d && this.#queue.world3d.length > 0) {
 			rl.BeginMode3D(scene.camera3d.handle);
@@ -141,8 +147,6 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 			this.#drawUi.bind(node.resolve(viewport));
 			node.draw(this.#drawUi);
 		}
-
-		rl.EndDrawing();
 	}
 
 	/** @internal */

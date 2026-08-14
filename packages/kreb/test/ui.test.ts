@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
-import { Anchor, type Rect } from '../src/core/node-ui.ts';
-import { emptyUiInput, type UiInput } from '../src/ui/input.ts';
-import { UiSystem } from '../src/ui/system.ts';
-import { Button, Checkbox, Label, Panel, Slider, TextInput } from '../src/ui/widgets.ts';
+import { Anchor, type Rect } from 'kreb/core/node-ui';
+import { emptyUiInput, type UiInput } from 'kreb/ui/input';
+import { UiSystem } from 'kreb/ui/system';
+import { Button, Checkbox, Label, Panel, Slider, TextInput } from 'kreb/ui/widgets';
 
 const VIEWPORT: Rect = { x: 0, y: 0, width: 800, height: 600 };
 

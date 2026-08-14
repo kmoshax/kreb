@@ -11,7 +11,8 @@
 		"./colors": "./generated/colors.ts",
 		"./enums": "./generated/enums.ts",
 		"./build": "./scripts/build-shim.ts",
-		"./codegen/*": "./tools/codegen/*.ts"
+		"./codegen/*": "./tools/codegen/*.ts",
+		"./shim-path": "./src/shim-path.ts"
 	},
 	"scripts": {
 		"postinstall": "bun scripts/postinstall.ts",

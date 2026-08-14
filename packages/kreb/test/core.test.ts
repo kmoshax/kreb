@@ -1,11 +1,11 @@
 import { expect, test } from 'bun:test';
 import { Vector3Transform } from '@kreb/math';
-import { Loop } from '../src/core/loop.ts';
-import { Node } from '../src/core/node.ts';
-import { Node2D } from '../src/core/node-2d.ts';
-import { Node3D } from '../src/core/node-3d.ts';
-import { Anchor, NodeUI } from '../src/core/node-ui.ts';
-import { RenderQueue } from '../src/core/render-queue.ts';
+import { Loop } from 'kreb/core/loop';
+import { Node } from 'kreb/core/node';
+import { Node2D } from 'kreb/core/node-2d';
+import { Node3D } from 'kreb/core/node-3d';
+import { Anchor, NodeUI } from 'kreb/core/node-ui';
+import { RenderQueue } from 'kreb/core/render-queue';
 
 class Bare extends Node {}
 
