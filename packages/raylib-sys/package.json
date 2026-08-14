@@ -9,6 +9,8 @@
 	},
 	"scripts": {
 		"postinstall": "bun scripts/postinstall.ts",
-		"build:shim": "bun scripts/build-shim.ts"
+		"build:shim": "bun scripts/build-shim.ts",
+		"codegen": "bun scripts/codegen.ts",
+		"vendor:api": "bun scripts/vendor-api.ts"
 	}
 }

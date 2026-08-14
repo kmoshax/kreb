@@ -1,44 +1,32 @@
+#include "kreb_color.h"
 #include <raylib.h>
 #include <stdint.h>
 
 // Permanent regression guards, not spike leftovers: a raylib version bump can
 // change a struct layout with no compile or link error, only wrong values.
 
-static Color color_from_rgba(uint32_t v) {
-    Color c;
-    c.r = (unsigned char)((v >> 24) & 0xFF);
-    c.g = (unsigned char)((v >> 16) & 0xFF);
-    c.b = (unsigned char)((v >> 8) & 0xFF);
-    c.a = (unsigned char)(v & 0xFF);
-    return c;
-}
-
-static uint32_t color_to_rgba(Color c) {
-    return ((uint32_t)c.r << 24) | ((uint32_t)c.g << 16) |
-           ((uint32_t)c.b << 8) | (uint32_t)c.a;
-}
 
 uint32_t probe_ret4_GetColor(uint32_t hex) {
-    return color_to_rgba(GetColor(hex));
+    return kreb_color_to_rgba(GetColor(hex));
 }
 
 int32_t probe_arg4_ColorToInt(uint32_t rgba) {
-    return (int32_t)ColorToInt(color_from_rgba(rgba));
+    return (int32_t)ColorToInt(kreb_color_from_rgba(rgba));
 }
 
 uint32_t probe_arg4_ret4_Fade(uint32_t rgba, float alpha) {
-    return color_to_rgba(Fade(color_from_rgba(rgba), alpha));
+    return kreb_color_to_rgba(Fade(kreb_color_from_rgba(rgba), alpha));
 }
 
 void probe_ret12_ColorToHSV(uint32_t rgba, float *out) {
-    Vector3 v = ColorToHSV(color_from_rgba(rgba));
+    Vector3 v = ColorToHSV(kreb_color_from_rgba(rgba));
     out[0] = v.x;
     out[1] = v.y;
     out[2] = v.z;
 }
 
 uint32_t probe_ret4_ColorFromHSV(float hue, float saturation, float value) {
-    return color_to_rgba(ColorFromHSV(hue, saturation, value));
+    return kreb_color_to_rgba(ColorFromHSV(hue, saturation, value));
 }
 
 int32_t probe_arg16x2_CheckCollisionRecs(float ax, float ay, float aw, float ah,
