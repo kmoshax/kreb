@@ -1,5 +1,5 @@
 import { mkdir } from 'node:fs/promises';
-import { planAccessors } from '../tools/codegen/accessors.ts';
+import { planAccessors, planWriters } from '../tools/codegen/accessors.ts';
 import { loadApi } from '../tools/codegen/api.ts';
 import { emitC } from '../tools/codegen/emit-c.ts';
 import { emitBindings, emitColors, emitEnums } from '../tools/codegen/emit-ts.ts';
@@ -12,11 +12,12 @@ export async function generate(): Promise<{ generated: number; skipped: number }
 	const api = await loadApi();
 	const plan = planApi(api.functions);
 	const accessors = planAccessors(api.structs);
+	const writers = planWriters(api.structs);
 
 	await mkdir(GENERATED, { recursive: true });
 
-	await Bun.write(`${NATIVE}kreb_shim.c`, emitC(plan, accessors));
-	await Bun.write(`${GENERATED}raylib.ts`, emitBindings(plan, accessors));
+	await Bun.write(`${NATIVE}kreb_shim.c`, emitC(plan, accessors, writers));
+	await Bun.write(`${GENERATED}raylib.ts`, emitBindings(plan, accessors, writers));
 	await Bun.write(`${GENERATED}enums.ts`, emitEnums(api.enums));
 	await Bun.write(`${GENERATED}colors.ts`, emitColors(api.defines));
 

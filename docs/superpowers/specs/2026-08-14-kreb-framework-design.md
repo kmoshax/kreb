@@ -1,7 +1,7 @@
 # kreb game framework — design
 
 **Date:** 2026-08-14
-**Status:** Approved. Phase 5 (raymath) complete; phases 6-12 not yet started.
+**Status:** Approved. Phases 5-6 complete; phases 7-12 not yet started.
 **Scope:** The kreb framework itself. The raylib FFI layer beneath it is designed separately in `2026-08-14-kreb-raylib-binding-design.md`.
 
 ## What kreb is
@@ -323,7 +323,7 @@ Binding phases 0 through 4 are specified in the binding layer design document. F
 | Phase | Deliverable | Complete when |
 | --- | --- | --- |
 | 5 | **Done.** raymath in pure TypeScript | 146 functions ported; parity verified against C raymath through a probe shim |
-| 6 | **Core: loop, nodes, transforms, render passes, draw contexts, scenes** | **playable demo — a moving sprite, a 3D model, and a HUD** |
+| 6 | **Done.** Core: loop, nodes, transforms, render passes, draw contexts, scenes | demo runs a bouncing sprite, two orbiting 3D cubes and a HUD in one frame; 30 framework tests |
 | 7 | Assets, CLI, typed manifest | `kreb new` scaffolds a project and `kreb dev` hot reloads it |
 | 8 | Input actions and edge latching | keyboard and gamepad behave correctly at 30fps |
 | 9 | Collision | 2D and 3D queries, callbacks, and layers |

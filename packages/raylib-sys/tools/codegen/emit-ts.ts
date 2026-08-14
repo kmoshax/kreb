@@ -1,4 +1,9 @@
-import { type Accessor, emitAccessorsSymbols } from './accessors.ts';
+import {
+	type Accessor,
+	emitAccessorsSymbols,
+	emitWritersSymbols,
+	type Writer,
+} from './accessors.ts';
 import type { ApiDefine, ApiEnum } from './api.ts';
 import type { Plan, PlannedFunction, PlannedParam } from './plan.ts';
 import { ffiReturnType, HANDLE_STRUCTS } from './typemap.ts';
@@ -106,7 +111,7 @@ function emitFunction(fn: PlannedFunction): string {
 	return [`export function ${fn.name}(${signature}): ${returnType} {`, returned, '}'].join('\n');
 }
 
-function emitSymbols(plan: Plan, accessors: Accessor[]): string {
+function emitSymbols(plan: Plan, accessors: Accessor[], writers: Writer[]): string {
 	const entries = plan.functions.map((fn) => {
 		const args = fn.parameters.flatMap((p) => p.flat.map((f) => `'${f.ffi}'`));
 		if (fn.outComponents) args.push(`'ptr'`);
@@ -123,12 +128,17 @@ function emitSymbols(plan: Plan, accessors: Accessor[]): string {
 		`\tkreb_free: { args: ['ptr'], returns: 'void' },`,
 		...allocators,
 		...emitAccessorsSymbols(accessors),
+		...emitWritersSymbols(writers),
 		...entries,
 		'} satisfies Record<string, FFIFunction>;',
 	].join('\n');
 }
 
-export function emitBindings(plan: Plan, accessors: Accessor[] = []): string {
+export function emitBindings(
+	plan: Plan,
+	accessors: Accessor[] = [],
+	writers: Writer[] = [],
+): string {
 	const scratchSize = Math.max(16, ...plan.functions.map((fn) => fn.outComponents?.length ?? 0));
 
 	return [
@@ -138,7 +148,7 @@ export function emitBindings(plan: Plan, accessors: Accessor[] = []): string {
 		'',
 		`export const SHIM_NAME = 'kreb_raylib';`,
 		'',
-		emitSymbols(plan, accessors),
+		emitSymbols(plan, accessors, writers),
 		'',
 		'export const symbols = loadShim(SHIM_NAME, shimSymbols);',
 		'',

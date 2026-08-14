@@ -1,4 +1,4 @@
-import { type Accessor, emitAccessorsC } from './accessors.ts';
+import { type Accessor, emitAccessorsC, emitWritersC, type Writer } from './accessors.ts';
 import type { Plan, PlannedFunction } from './plan.ts';
 import { HANDLE_STRUCTS } from './typemap.ts';
 
@@ -110,8 +110,8 @@ function allocators(): string {
 		.join('\n\n');
 }
 
-export function emitC(plan: Plan, accessors: Accessor[] = []): string {
+export function emitC(plan: Plan, accessors: Accessor[] = [], writers: Writer[] = []): string {
 	const functions = plan.functions.map((fn) => `${signature(fn)} {\n${body(fn)}\n}`).join('\n\n');
 
-	return `${PREAMBLE}\n${allocators()}\n\n${emitAccessorsC(accessors)}\n\n${functions}\n`;
+	return `${PREAMBLE}\n${allocators()}\n\n${emitAccessorsC(accessors)}\n\n${emitWritersC(writers)}\n\n${functions}\n`;
 }

@@ -5,6 +5,7 @@ export type Accessor =
 	| { kind: 'scalar'; struct: string; field: string; c: string; ffi: string }
 	| { kind: 'color'; struct: string; field: string }
 	| { kind: 'ref'; struct: string; field: string }
+	| { kind: 'matrix'; struct: string; field: string }
 	| { kind: 'value'; struct: string; field: string; valueStruct: string; components: number };
 
 export function planAccessors(structs: ApiStruct[]): Accessor[] {
@@ -50,7 +51,15 @@ export function planAccessors(structs: ApiStruct[]): Accessor[] {
 			// Nested handle structs are reachable as an interior pointer, which
 			// keeps the parent as the owner and avoids a second allocation.
 			const resolved = resolveAlias(field.type);
-			if (HANDLE_STRUCTS.has(resolved) || resolved === 'Matrix') {
+
+			// A Matrix field needs a converting accessor pair, not a raw pointer:
+			// the struct's field order is not m-index order.
+			if (resolved === 'Matrix') {
+				accessors.push({ kind: 'matrix', struct: struct.name, field: field.name });
+				continue;
+			}
+
+			if (HANDLE_STRUCTS.has(resolved)) {
 				accessors.push({ kind: 'ref', struct: struct.name, field: field.name });
 			}
 		}
@@ -62,6 +71,10 @@ export function planAccessors(structs: ApiStruct[]): Accessor[] {
 export function accessorName(accessor: Accessor): string {
 	const prefix = accessor.kind === 'ref' ? 'kreb_ref' : 'kreb_get';
 	return `${prefix}_${accessor.struct}_${accessor.field}`;
+}
+
+export function matrixSetterName(accessor: Accessor): string {
+	return `kreb_set_${accessor.struct}_${accessor.field}`;
 }
 
 export function emitAccessorsC(accessors: Accessor[]): string {
@@ -79,6 +92,17 @@ export function emitAccessorsC(accessors: Accessor[]): string {
 
 				case 'ref':
 					return `void *${name}(void *handle) {\n    return &${self}->${accessor.field};\n}`;
+
+				case 'matrix':
+					return [
+						`void ${name}(void *handle, float *kreb_out) {`,
+						`    kreb_matrix_to_floats(${self}->${accessor.field}, kreb_out);`,
+						'}',
+						'',
+						`void ${matrixSetterName(accessor)}(void *handle, const float *kreb_in) {`,
+						`    ${self}->${accessor.field} = kreb_matrix_from_floats(kreb_in);`,
+						'}',
+					].join('\n');
 
 				case 'value': {
 					const value = VALUE_STRUCTS[accessor.valueStruct];
@@ -103,8 +127,88 @@ export function emitAccessorsSymbols(accessors: Accessor[]): string[] {
 				return `\t${name}: { args: ['ptr'], returns: 'u32' },`;
 			case 'ref':
 				return `\t${name}: { args: ['ptr'], returns: 'ptr' },`;
+			case 'matrix':
+				return (
+					`\t${name}: { args: ['ptr', 'ptr'], returns: 'void' },\n` +
+					`\t${matrixSetterName(accessor)}: { args: ['ptr', 'ptr'], returns: 'void' },`
+				);
 			case 'value':
 				return `\t${name}: { args: ['ptr', 'ptr'], returns: 'void' },`;
 		}
 	});
+}
+
+export type Writer = {
+	struct: string;
+	/** Flat float slots, in declaration order. */
+	size: number;
+	assignments: string[];
+};
+
+/**
+ * Structs made entirely of numeric fields get a bulk writer, so setting a
+ * camera every frame costs one FFI call rather than one per field.
+ */
+export function planWriters(structs: ApiStruct[]): Writer[] {
+	const writers: Writer[] = [];
+
+	for (const struct of structs) {
+		if (!HANDLE_STRUCTS.has(struct.name)) continue;
+
+		const assignments: string[] = [];
+		let slot = 0;
+		let writable = struct.fields.length > 0;
+
+		for (const field of struct.fields) {
+			if (field.type.includes('[')) {
+				writable = false;
+				break;
+			}
+
+			const info = classify(field.type);
+			const self = `((${struct.name} *)handle)`;
+
+			if (info.kind === 'scalar') {
+				assignments.push(`    ${self}->${field.name} = (${field.type})v[${slot}];`);
+				slot += 1;
+				continue;
+			}
+
+			if (info.kind === 'value') {
+				for (const component of info.struct.components) {
+					const path = component.name.replace('_', '.');
+					assignments.push(`    ${self}->${field.name}.${path} = v[${slot}];`);
+					slot += 1;
+				}
+				continue;
+			}
+
+			writable = false;
+			break;
+		}
+
+		if (writable && slot > 0) {
+			writers.push({ struct: struct.name, size: slot, assignments });
+		}
+	}
+
+	return writers;
+}
+
+export function emitWritersC(writers: Writer[]): string {
+	return writers
+		.map((writer) =>
+			[
+				`void kreb_write_${writer.struct}(void *handle, const float *v) {`,
+				...writer.assignments,
+				'}',
+			].join('\n'),
+		)
+		.join('\n\n');
+}
+
+export function emitWritersSymbols(writers: Writer[]): string[] {
+	return writers.map(
+		(writer) => `\tkreb_write_${writer.struct}: { args: ['ptr', 'ptr'], returns: 'void' },`,
+	);
 }

@@ -334,8 +334,12 @@ int32_t kreb_get_ModelSkeleton_boneCount(void *handle) {
     return (int32_t)((ModelSkeleton *)handle)->boneCount;
 }
 
-void *kreb_ref_Model_transform(void *handle) {
-    return &((Model *)handle)->transform;
+void kreb_get_Model_transform(void *handle, float *kreb_out) {
+    kreb_matrix_to_floats(((Model *)handle)->transform, kreb_out);
+}
+
+void kreb_set_Model_transform(void *handle, const float *kreb_in) {
+    ((Model *)handle)->transform = kreb_matrix_from_floats(kreb_in);
 }
 
 int32_t kreb_get_Model_meshCount(void *handle) {
@@ -456,6 +460,49 @@ uint32_t kreb_get_AutomationEventList_capacity(void *handle) {
 
 uint32_t kreb_get_AutomationEventList_count(void *handle) {
     return (uint32_t)((AutomationEventList *)handle)->count;
+}
+
+void kreb_write_Texture(void *handle, const float *v) {
+    ((Texture *)handle)->id = (unsigned int)v[0];
+    ((Texture *)handle)->width = (int)v[1];
+    ((Texture *)handle)->height = (int)v[2];
+    ((Texture *)handle)->mipmaps = (int)v[3];
+    ((Texture *)handle)->format = (int)v[4];
+}
+
+void kreb_write_NPatchInfo(void *handle, const float *v) {
+    ((NPatchInfo *)handle)->source.x = v[0];
+    ((NPatchInfo *)handle)->source.y = v[1];
+    ((NPatchInfo *)handle)->source.width = v[2];
+    ((NPatchInfo *)handle)->source.height = v[3];
+    ((NPatchInfo *)handle)->left = (int)v[4];
+    ((NPatchInfo *)handle)->top = (int)v[5];
+    ((NPatchInfo *)handle)->right = (int)v[6];
+    ((NPatchInfo *)handle)->bottom = (int)v[7];
+    ((NPatchInfo *)handle)->layout = (int)v[8];
+}
+
+void kreb_write_Camera3D(void *handle, const float *v) {
+    ((Camera3D *)handle)->position.x = v[0];
+    ((Camera3D *)handle)->position.y = v[1];
+    ((Camera3D *)handle)->position.z = v[2];
+    ((Camera3D *)handle)->target.x = v[3];
+    ((Camera3D *)handle)->target.y = v[4];
+    ((Camera3D *)handle)->target.z = v[5];
+    ((Camera3D *)handle)->up.x = v[6];
+    ((Camera3D *)handle)->up.y = v[7];
+    ((Camera3D *)handle)->up.z = v[8];
+    ((Camera3D *)handle)->fovy = (float)v[9];
+    ((Camera3D *)handle)->projection = (int)v[10];
+}
+
+void kreb_write_Camera2D(void *handle, const float *v) {
+    ((Camera2D *)handle)->offset.x = v[0];
+    ((Camera2D *)handle)->offset.y = v[1];
+    ((Camera2D *)handle)->target.x = v[2];
+    ((Camera2D *)handle)->target.y = v[3];
+    ((Camera2D *)handle)->rotation = (float)v[4];
+    ((Camera2D *)handle)->zoom = (float)v[5];
 }
 
 void kreb_InitWindow(int32_t width, int32_t height, const char *title) {

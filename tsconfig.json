@@ -12,6 +12,8 @@
 		// Bundler mode
 		"moduleResolution": "bundler",
 		"paths": {
+			"kreb": ["./packages/kreb/src/index.ts"],
+			"kreb/*": ["./packages/kreb/src/*.ts"],
 			"@kreb/math": ["./packages/kreb-math/src/index.ts"],
 			"@kreb/math/*": ["./packages/kreb-math/src/*.ts"],
 			"@kreb/raylib-sys": ["./packages/raylib-sys/src/index.ts"],
