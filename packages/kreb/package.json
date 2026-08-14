@@ -4,10 +4,14 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./cli": "./src/cli/index.ts"
 	},
 	"dependencies": {
 		"@kreb/math": "workspace:*",
 		"@kreb/raylib-sys": "workspace:*"
+	},
+	"bin": {
+		"kreb": "./bin/kreb"
 	}
 }

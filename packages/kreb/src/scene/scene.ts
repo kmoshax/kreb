@@ -1,9 +1,16 @@
+import { AssetCache } from '../assets/cache.ts';
+import { AssetScope } from '../assets/scope.ts';
 import type { Camera2D, Camera3D } from '../core/camera.ts';
 import { Node } from '../core/node.ts';
+
+/** Outlives every scene, so a shared texture is loaded once and reused. */
+export const assetCache = new AssetCache();
 
 export class Scene extends Node {
 	camera2d: Camera2D | null = null;
 	camera3d: Camera3D | null = null;
+
+	readonly assets = new AssetScope(assetCache);
 
 	/** Runs once when the scene becomes active, before its first update. */
 	override ready(): void {}
@@ -45,5 +52,6 @@ export class SceneManager {
 
 		scene.leaveTree();
 		scene.destroy();
+		scene.assets.releaseAll();
 	}
 }

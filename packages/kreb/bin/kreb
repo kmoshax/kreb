@@ -1,0 +1,11 @@
+#!/usr/bin/env bun
+import { run } from '../src/cli/index.ts';
+
+const result = await run(process.argv.slice(2));
+
+if (result.message) {
+	if (result.code === 0) console.log(result.message);
+	else console.error(result.message);
+}
+
+process.exit(result.code);
