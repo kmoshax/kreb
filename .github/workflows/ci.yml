@@ -65,6 +65,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb libgl1 libglx-mesa0 libx11-6 mesa-utils
 
+      - name: raymath parity
+        run: bun test packages/kreb
+
       - name: GL tests
         if: startsWith(matrix.target, 'linux')
         run: xvfb-run -a bun test packages/raylib-sys/test/gl

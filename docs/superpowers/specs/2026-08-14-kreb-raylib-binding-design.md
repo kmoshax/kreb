@@ -1,7 +1,7 @@
 # kreb raylib binding layer — design
 
 **Date:** 2026-08-14
-**Status:** Phase 0 complete. The runtime-compilation approach was tested and rejected; this document reflects the prebuilt-shim design that replaced it.
+**Status:** Phases 0-4 complete and passing. The runtime-compilation approach was tested and rejected in phase 0; this document reflects the prebuilt-shim design that replaced it.
 **Scope:** Layer 0 of kreb — the FFI binding between Bun and raylib. The kreb game framework is designed separately in `2026-08-14-kreb-framework-design.md`.
 
 ## Purpose
@@ -177,10 +177,10 @@ macOS and Windows CI run the codegen and nogl tiers only. Headless OpenGL on tho
 | Phase | Deliverable | Complete when |
 | --- | --- | --- |
 | 0 | **Done.** ABI spike, platform asset check, TinyCC rejected, prebuilt path verified | struct round-trips correct on the prebuilt path; 11 of 11 probes pass on linux-x64 |
-| 1 | `postinstall.ts`, `loader.ts`, CI build matrix | a clean machine installs raylib and loads a prebuilt shim with no toolchain present |
-| 2 | Hand-written shim of roughly 15 functions: window, input, `ClearBackground`, `DrawText`, `DrawCircleV` | a window opens, text renders, Escape closes it |
-| 3 | Codegen replaces the hand-written shim; full `raylib.h` | generated output passes phase 2's tests unchanged |
-| 4 | Resource handles | textures, models, and audio load, draw, and dispose; use after dispose throws |
+| 1 | **Done.** `postinstall.ts`, `loader.ts`, six-target CI matrix | clean install downloads and checksum-verifies raylib; loader dlopens the prebuilt shim |
+| 2 | **Done, then removed as superseded.** Hand-written 18-function shim | window opened and drew; deleted once phase 3 passed the same assertions |
+| 3 | **Done.** Codegen over all of `raylib.h` | 598 of 600 functions generated, 624 exported symbols, zero compiler warnings; only the two variadic functions skipped |
+| 4 | **Done.** Resource handles | 10 handle classes; use-after-dispose throws naming the resource, failed loads throw, ownership transfer via `disown()` |
 
 Phase 2 exists separately from phase 3 deliberately. It is cheap, and it means that when generated code first fails, the loader, the download, and the ABI are already known good, so the bug is in the emitter.
 
