@@ -134,7 +134,7 @@ export function emitBindings(plan: Plan, accessors: Accessor[] = []): string {
 	return [
 		HEADER,
 		`import { type FFIFunction, type Pointer, CString, ptr } from 'bun:ffi';`,
-		`import { loadShim } from '../loader.ts';`,
+		`import { loadShim } from '@kreb/raylib-sys/loader';`,
 		'',
 		`export const SHIM_NAME = 'kreb_raylib';`,
 		'',

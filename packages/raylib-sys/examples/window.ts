@@ -4,8 +4,8 @@ import { buildShim } from '../scripts/build-shim.ts';
 
 await buildShim([new URL('../native/kreb_shim.c', import.meta.url).pathname], 'kreb_raylib');
 
-const rl = await import('../src/generated/raylib.ts');
-const { DARKBLUE, MAROON, RAYWHITE } = await import('../src/generated/colors.ts');
+const rl = await import('@kreb/raylib-sys/raylib');
+const { DARKBLUE, MAROON, RAYWHITE } = await import('@kreb/raylib-sys/colors');
 
 const WIDTH = 800;
 const HEIGHT = 450;

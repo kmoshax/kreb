@@ -7,9 +7,9 @@
 		".": "./src/index.ts",
 		"./loader": "./src/loader.ts",
 		"./handles": "./src/handles.ts",
-		"./raylib": "./src/generated/raylib.ts",
-		"./colors": "./src/generated/colors.ts",
-		"./enums": "./src/generated/enums.ts",
+		"./raylib": "./generated/raylib.ts",
+		"./colors": "./generated/colors.ts",
+		"./enums": "./generated/enums.ts",
 		"./build": "./scripts/build-shim.ts",
 		"./codegen/*": "./tools/codegen/*.ts"
 	},

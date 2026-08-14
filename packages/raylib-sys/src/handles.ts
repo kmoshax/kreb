@@ -1,5 +1,5 @@
 import type { Pointer } from 'bun:ffi';
-import * as rl from './generated/raylib.ts';
+import * as rl from '@kreb/raylib-sys/raylib';
 
 const DEV = process.env.NODE_ENV !== 'production';
 

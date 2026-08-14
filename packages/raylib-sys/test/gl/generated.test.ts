@@ -10,8 +10,8 @@ const HEIGHT = 240;
 const FLAG_WINDOW_HIDDEN = 0x00000080;
 const LOG_WARNING = 4;
 
-type Bindings = typeof import('../../src/generated/raylib.ts');
-type Colors = typeof import('../../src/generated/colors.ts');
+type Bindings = typeof import('@kreb/raylib-sys/raylib');
+type Colors = typeof import('@kreb/raylib-sys/colors');
 
 let rl: Bindings;
 let colors: Colors;
@@ -20,8 +20,8 @@ beforeAll(async () => {
 	const source = new URL('../../native/kreb_shim.c', import.meta.url).pathname;
 	await buildShim([source], 'kreb_raylib');
 
-	rl = await import('../../src/generated/raylib.ts');
-	colors = await import('../../src/generated/colors.ts');
+	rl = await import('@kreb/raylib-sys/raylib');
+	colors = await import('@kreb/raylib-sys/colors');
 
 	rl.SetTraceLogLevel(LOG_WARNING);
 	rl.SetConfigFlags(FLAG_WINDOW_HIDDEN);

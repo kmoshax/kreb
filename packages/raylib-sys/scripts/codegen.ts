@@ -6,7 +6,7 @@ import { emitBindings, emitColors, emitEnums } from '../tools/codegen/emit-ts.ts
 import { planApi } from '../tools/codegen/plan.ts';
 
 const NATIVE = new URL('../native/', import.meta.url).pathname;
-const GENERATED = new URL('../src/generated/', import.meta.url).pathname;
+const GENERATED = new URL('../generated/', import.meta.url).pathname;
 
 export async function generate(): Promise<{ generated: number; skipped: number }> {
 	const api = await loadApi();

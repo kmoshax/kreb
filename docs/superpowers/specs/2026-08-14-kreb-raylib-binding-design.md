@@ -25,7 +25,7 @@ vendor/raylib-api/*.json      pinned raylib 6.0 API description, committed
         │  codegen runs at development time; output is committed
         ▼
 native/kreb_shim.c            flat C wrappers — no struct-by-value at the JS boundary
-src/generated/*.ts            FFI symbol tables, typed wrappers, enums, constants
+generated/*.ts                FFI symbol tables, typed wrappers, enums, constants
         │  compiled per platform in CI by the system C compiler
         ▼
 build/<platform>-<arch>/libkreb_raylib.so    shipped prebuilt
@@ -141,8 +141,10 @@ packages/raylib-sys/
     load-api.ts        parse and validate the API description
     typemap.ts         the ABI table above — single source of truth
     emit-c.ts          emits native/kreb_shim.c
-    emit-ts.ts         emits src/generated/*.ts
+    emit-ts.ts         emits generated/*.ts
     __snapshots__/     golden output
+  generated/           GENERATED, committed
+    raylib.ts  enums.ts  colors.ts
   native/
     kreb_shim.c        GENERATED, committed
     abi_probe.c        hand-written, phase 0, retained as regression tests
@@ -152,7 +154,6 @@ packages/raylib-sys/
     loader.ts          locate the prebuilt shim, dlopen, cache the handle
     handles.ts         handle base class, dispose, use-after-free guard
     scratch.ts         shared struct-return buffer
-    generated/raylib.ts, enums.ts, colors.ts
   scripts/
     build-shim.ts      compile native/*.c with the system compiler
     postinstall.ts     download and verify the raylib release
