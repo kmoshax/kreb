@@ -7,6 +7,7 @@ import { Draw2DContext, Draw3DContext, DrawUIContext } from './draw/contexts.ts'
 import { input } from './input/input.ts';
 import type { Scene } from './scene/scene.ts';
 import { SceneManager } from './scene/scene.ts';
+import { readUiInput } from './ui/read-input.ts';
 
 export type WindowOptions = {
 	width: number;
@@ -92,6 +93,9 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 	update(dt: number): void {
 		const scene = this.scenes.active;
 
+		scene.ui.collect(scene);
+		scene.ui.step(this.viewport(), readUiInput());
+
 		scene.updateTree(dt);
 
 		// After movement, so callbacks see the positions the step produced.
@@ -106,12 +110,7 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 		this.#queue.collect(scene);
 		this.#queue.sort(scene.camera3d?.globalPosition ?? null);
 
-		const viewport: Rect = {
-			x: 0,
-			y: 0,
-			width: rl.GetScreenWidth(),
-			height: rl.GetScreenHeight(),
-		};
+		const viewport = this.viewport();
 
 		rl.BeginDrawing();
 		rl.ClearBackground(this.#options.clearColor ?? RAYWHITE);
@@ -144,6 +143,11 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 		}
 
 		rl.EndDrawing();
+	}
+
+	/** @internal */
+	viewport(): Rect {
+		return { x: 0, y: 0, width: rl.GetScreenWidth(), height: rl.GetScreenHeight() };
 	}
 
 	/** @internal */

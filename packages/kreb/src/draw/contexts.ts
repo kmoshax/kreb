@@ -170,6 +170,10 @@ export class DrawUIContext implements DrawUI {
 		);
 	}
 
+	measure(value: string, size = DEFAULT_TEXT_SIZE): number {
+		return rl.MeasureText(value, size);
+	}
+
 	rect(x: number, y: number, width: number, height: number, options?: FillOptions): void {
 		rl.DrawRectangleRec(this.#rect.x + x, this.#rect.y + y, width, height, fill(options));
 	}

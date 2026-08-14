@@ -62,3 +62,9 @@ export {
 export { type InputDevice, raylibDevice } from './input/device.ts';
 export { Input, type InputOptions, input } from './input/input.ts';
 export { assetCache, Scene, SceneManager } from './scene/scene.ts';
+export { emptyUiInput, type UiInput } from './ui/input.ts';
+export { readUiInput } from './ui/read-input.ts';
+export { UiSystem } from './ui/system.ts';
+export { defaultTheme, type Theme } from './ui/theme.ts';
+export { isWidget, Widget, type WidgetState } from './ui/widget.ts';
+export { Button, Checkbox, Label, Panel, Slider, TextInput } from './ui/widgets.ts';

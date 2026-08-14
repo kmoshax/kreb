@@ -45,6 +45,8 @@ export interface Draw3D {
 
 export interface DrawUI {
 	text(value: string, x: number, y: number, options?: TextOptions): void;
+	/** Width the given text would occupy, for centring and caret placement. */
+	measure(value: string, size?: number): number;
 	rect(x: number, y: number, width: number, height: number, options?: FillOptions): void;
 	sprite(texture: Texture, x: number, y: number, options?: SpriteOptions): void;
 }
