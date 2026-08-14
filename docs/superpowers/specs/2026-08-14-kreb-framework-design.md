@@ -1,7 +1,7 @@
 # kreb game framework — design
 
 **Date:** 2026-08-14
-**Status:** Approved. Phases 5-10 complete; phases 11-12 not yet started.
+**Status:** Approved. Phases 5-11 complete; phase 12 not yet started.
 **Scope:** The kreb framework itself. The raylib FFI layer beneath it is designed separately in `2026-08-14-kreb-raylib-binding-design.md`.
 
 ## What kreb is
@@ -328,7 +328,7 @@ Binding phases 0 through 4 are specified in the binding layer design document. F
 | 8 | **Done.** Input actions and edge latching | a press reaches exactly one fixed step at 30fps, and an edge seen during a stepless frame is carried rather than dropped |
 | 9 | **Done.** Collision | 2D and 3D overlap, raycast and layer masks share one dimension-agnostic implementation; enter/exit callbacks fire from inside the fixed step |
 | 10 | **Done.** Native UI | panel, label, button, checkbox, slider and text input with anchor layout, pointer and keyboard focus; the demo has a settings screen overlaying the level |
-| 11 | Extras | tweens, timers, particles, FSM |
+| 11 | **Done.** Extras | callback tweens with delay, repeat and ping-pong; timers reporting every period a long frame spans; a pooled particle system shared by 2D and 3D emitters; typed state machines |
 | 12 | Documentation, examples, publish | |
 
 Phase 6 is the real milestone — the first point at which kreb is a thing rather than a plan. Everything before it is infrastructure, and the earlier phases should be optimized for reaching phase 6 rather than for completeness.

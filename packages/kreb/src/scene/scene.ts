@@ -3,6 +3,7 @@ import { AssetScope } from '../assets/scope.ts';
 import { CollisionWorld } from '../collision/world.ts';
 import type { Camera2D, Camera3D } from '../core/camera.ts';
 import { Node } from '../core/node.ts';
+import { TweenRunner } from '../extras/tween.ts';
 import { UiSystem } from '../ui/system.ts';
 
 /** Outlives every scene, so a shared texture is loaded once and reused. */
@@ -15,6 +16,7 @@ export class Scene extends Node {
 	readonly assets = new AssetScope(assetCache);
 	readonly collisions = new CollisionWorld();
 	readonly ui = new UiSystem();
+	readonly tweens = new TweenRunner();
 
 	/** Runs once when the scene becomes active, before its first update. */
 	override ready(): void {}

@@ -97,6 +97,7 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 		scene.ui.step(this.viewport(), readUiInput());
 
 		scene.updateTree(dt);
+		scene.tweens.update(dt);
 
 		// After movement, so callbacks see the positions the step produced.
 		scene.collisions.collect(scene);
@@ -122,10 +123,12 @@ export class Game<Scenes extends Record<string, new () => Scene>> {
 		this.#queue.sort(scene.camera3d?.globalPosition ?? null);
 
 		if (scene.camera3d && this.#queue.world3d.length > 0) {
-			rl.BeginMode3D(scene.camera3d.handle);
+			const camera = scene.camera3d.handle;
+
+			rl.BeginMode3D(camera);
 
 			for (const node of this.#queue.world3d) {
-				this.#draw3d.bind(node.globalTransform, node.globalPosition);
+				this.#draw3d.bind(node.globalTransform, node.globalPosition, camera);
 				node.draw(this.#draw3d);
 			}
 

@@ -7,6 +7,10 @@ import type { Draw2D, Draw3D, DrawUI } from 'kreb';
 await buildShim([SHIM_SOURCE], 'kreb_raylib');
 
 const {
+	Ease,
+	ParticleEmitter2D,
+	Timer,
+	fsm,
 	Button,
 	Checkbox,
 	Label,
@@ -89,14 +93,35 @@ class Ground extends Node3D {
 class Player extends Node2D {
 	readonly texture = Texture.fromImage(Image.color(48, 48, MAROON));
 
+	readonly motion = fsm({
+		idle: { move: 'moving' },
+		moving: { halt: 'idle' },
+	});
+
+	readonly trail = this.add(
+		new ParticleEmitter2D({
+			rate: 90,
+			lifetime: { min: 0.3, max: 0.7 },
+			speed: { min: 20, max: 70 },
+			size: { start: 7, end: 0 },
+			color: { start: 0x4f8cf7ff, end: 0x4f8cf700 },
+			gravity: [0, 140],
+		}),
+	);
+
 	readonly #velocity = { x: 220, y: 160 };
 
 	#driven = false;
 
 	override update(dt: number): void {
 		const direction = input.axis(Act.move);
+		const moving = direction.x !== 0 || direction.y !== 0;
 
-		if (direction.x !== 0 || direction.y !== 0) {
+		this.motion.send(moving ? 'move' : 'halt');
+		this.trail.system.stop();
+		if (moving) this.trail.system.start();
+
+		if (moving) {
 			this.#driven = true;
 			const speed = input.held(Act.boost) ? 720 : 320;
 			this.position.x += direction.x * speed * dt;
@@ -127,16 +152,30 @@ class Trail extends Node2D {
 class Hud extends NodeUI {
 	frames = 0;
 	jumps = 0;
+	pulse = 0;
 
-	override update(): void {
+	readonly beat = new Timer(1, { repeat: true });
+
+	override update(dt: number): void {
 		this.frames += 1;
 		if (input.pressed(Act.jump)) this.jumps += 1;
+
+		// The scene's runner drives the tween; the timer decides when to start one.
+		if (this.beat.update(dt) > 0) {
+			const scene = this.parent;
+			if (scene instanceof Scene) {
+				scene.tweens.run(0.6, Ease.OutCubic, (t) => {
+					this.pulse = 1 - t;
+				});
+			}
+		}
 	}
 
 	override draw(g: DrawUI): void {
-		g.rect(0, 0, 240, 58, { color: DARKBLUE });
+		g.rect(0, 0, 240, 62, { color: DARKBLUE });
 		g.text('WASD · shift · space', 10, 8, { size: 20, color: RAYWHITE });
 		g.text(`${playerName} · ${this.jumps} jumps`, 10, 32, { size: 16, color: WHITE });
+		g.rect(0, 54, 240 * this.pulse, 4, { color: GOLD });
 	}
 }
 
@@ -202,7 +241,7 @@ class Level extends Scene {
 
 		const hud = this.add(new Hud('hud'));
 		hud.anchor = Anchor.TopLeft;
-		hud.offset = { x: 12, y: 12, width: 240, height: 58 };
+		hud.offset = { x: 12, y: 12, width: 240, height: 62 };
 
 		const open = this.add(
 			new Button('Settings', () => {

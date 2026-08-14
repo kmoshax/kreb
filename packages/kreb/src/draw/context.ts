@@ -38,6 +38,8 @@ export interface Draw2D {
 
 export interface Draw3D {
 	model(model: Model, options?: SpriteOptions): void;
+	/** Camera-facing quad at an offset from the node, for particles and sprites. */
+	billboard(texture: Texture, offset: Vector3, size: number, options?: SpriteOptions): void;
 	cube(size: Vector3, options?: FillOptions): void;
 	sphere(radius: number, options?: FillOptions): void;
 	line(from: Vector3, to: Vector3, options?: StrokeOptions): void;

@@ -46,6 +46,17 @@ export type {
 	StrokeOptions,
 	TextOptions,
 } from './draw/context.ts';
+export { Ease, type EaseFn, type EaseName, lerp, lerpColor } from './extras/ease.ts';
+export { type EventOf, Fsm, fsm, type StateOf, type Transition } from './extras/fsm.ts';
+export {
+	type Particle,
+	ParticleEmitter2D,
+	ParticleEmitter3D,
+	type ParticleOptions,
+	ParticleSystem,
+} from './extras/particles.ts';
+export { Timer, type TimerOptions } from './extras/timer.ts';
+export { Tween, type TweenOptions, TweenRunner } from './extras/tween.ts';
 export { Game, type GameOptions, game, type WindowOptions } from './game.ts';
 export {
 	type Action,

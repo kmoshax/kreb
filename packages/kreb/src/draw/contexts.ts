@@ -1,4 +1,4 @@
-import { ptr } from 'bun:ffi';
+import { type Pointer, ptr } from 'bun:ffi';
 import type { Vector2, Vector3 } from '@kreb/math';
 import type { Model, Texture } from '@kreb/raylib-sys';
 import { WHITE } from '@kreb/raylib-sys/colors';
@@ -109,11 +109,31 @@ export class Draw2DContext implements Draw2D {
 export class Draw3DContext implements Draw3D {
 	#transform: Float32Array | null = null;
 	#position: Vector3 = { x: 0, y: 0, z: 0 };
+	#camera: Pointer | null = null;
 
 	/** @internal */
-	bind(transform: Float32Array, position: Vector3): void {
+	bind(transform: Float32Array, position: Vector3, camera: Pointer | null): void {
 		this.#transform = transform;
 		this.#position = position;
+		this.#camera = camera;
+	}
+
+	billboard(texture: Texture, offset: Vector3, size: number, options?: SpriteOptions): void {
+		if (this.#camera === null) {
+			throw new Error('Draw3D.billboard needs an active Camera3D on the scene');
+		}
+
+		const p = this.#position;
+
+		rl.DrawBillboard(
+			this.#camera,
+			texture.pointer,
+			p.x + offset.x,
+			p.y + offset.y,
+			p.z + offset.z,
+			size,
+			options?.tint ?? WHITE,
+		);
 	}
 
 	model(model: Model, options?: SpriteOptions): void {
