@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Each platform builds only its own shim: cross-compiling six targets from one
+  # runner would mean trusting a toolchain the ABI probes have never run under.
+  shim:
+    name: shim (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { target: linux-x64, runner: ubuntu-latest }
+          - { target: linux-arm64, runner: ubuntu-24.04-arm }
+          - { target: darwin-x64, runner: macos-13 }
+          - { target: darwin-arm64, runner: macos-14 }
+          - { target: win32-x64, runner: windows-latest }
+          - { target: win32-arm64, runner: windows-11-arm }
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Set up MSVC
+        if: startsWith(matrix.target, 'win32')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.target == 'win32-arm64' && 'arm64' || 'x64' }}
+
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/set-version.ts "${GITHUB_REF_NAME#v}"
+        shell: bash
+
+      # The gate: a shim whose struct ABI is wrong must never be published.
+      - name: Struct ABI probes
+        run: bun test packages/raylib-sys/test/nogl
+
+      - name: Pack platform package
+        shell: bash
+        run: |
+          cd packages/raylib-sys
+          bun scripts/pack-platform.ts "${GITHUB_REF_NAME#v}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: platform-${{ matrix.target }}
+          path: packages/raylib-sys/dist-platform/
+
+  publish:
+    needs: shim
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/set-version.ts "${GITHUB_REF_NAME#v}"
+
+      - run: bun run check
+      - run: bun run typecheck
+      - run: bun test packages/kreb packages/kreb-math
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: platform-*
+          merge-multiple: true
+          path: dist-platform
+
+      # Platform packages first: kreb resolves them as optional dependencies, so
+      # publishing the framework before its shims leaves a broken window where
+      # an install finds no binary.
+      - name: Publish platform packages
+        run: |
+          for dir in dist-platform/*/; do
+            npm publish "$dir" --access public --provenance
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish libraries
+        run: |
+          npm publish packages/kreb-math --access public --provenance
+          npm publish packages/raylib-sys --access public --provenance
+          npm publish packages/kreb --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

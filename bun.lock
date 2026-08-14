@@ -3,10 +3,13 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "kreb",
+      "name": "kreb-monorepo",
       "devDependencies": {
         "@biomejs/biome": "2.5.8",
+        "@kreb/math": "workspace:*",
+        "@kreb/raylib-sys": "workspace:*",
         "@types/bun": "latest",
+        "kreb": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",
@@ -14,7 +17,10 @@
     },
     "packages/kreb": {
       "name": "kreb",
-      "version": "0.0.0",
+      "version": "0.1.0",
+      "bin": {
+        "kreb": "./bin/kreb",
+      },
       "dependencies": {
         "@kreb/math": "workspace:*",
         "@kreb/raylib-sys": "workspace:*",
@@ -22,11 +28,19 @@
     },
     "packages/kreb-math": {
       "name": "@kreb/math",
-      "version": "0.0.0",
+      "version": "0.1.0",
     },
     "packages/raylib-sys": {
       "name": "@kreb/raylib-sys",
-      "version": "0.0.0",
+      "version": "0.1.0",
+      "optionalDependencies": {
+        "kreb-darwin-arm64": "0.1.0",
+        "kreb-darwin-x64": "0.1.0",
+        "kreb-linux-arm64": "0.1.0",
+        "kreb-linux-x64": "0.1.0",
+        "kreb-win32-arm64": "0.1.0",
+        "kreb-win32-x64": "0.1.0",
+      },
     },
   },
   "packages": {

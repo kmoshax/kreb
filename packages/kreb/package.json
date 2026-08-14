@@ -1,7 +1,7 @@
 {
 	"name": "kreb",
-	"version": "0.0.0",
-	"private": true,
+	"version": "0.1.0",
+	"private": false,
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
@@ -9,10 +9,38 @@
 		"./*": "./src/*.ts"
 	},
 	"dependencies": {
-		"@kreb/math": "workspace:*",
-		"@kreb/raylib-sys": "workspace:*"
+		"@kreb/math": "0.1.0",
+		"@kreb/raylib-sys": "0.1.0"
 	},
 	"bin": {
 		"kreb": "./bin/kreb"
-	}
+	},
+	"description": "A game framework for Bun, built on raylib. 2D and 3D, TypeScript-first.",
+	"keywords": [
+		"game",
+		"gamedev",
+		"engine",
+		"framework",
+		"raylib",
+		"bun",
+		"2d",
+		"3d"
+	],
+	"license": "MIT",
+	"author": "kmoshax",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/kmoshax/kreb.git",
+		"directory": "packages/kreb"
+	},
+	"homepage": "https://github.com/kmoshax/kreb#readme",
+	"bugs": "https://github.com/kmoshax/kreb/issues",
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"src",
+		"bin",
+		"README.md"
+	]
 }

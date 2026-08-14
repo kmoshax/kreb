@@ -1,348 +1,197 @@
-# kreb game framework — design
+# kreb raylib binding layer — design
 
 **Date:** 2026-08-14
-**Status:** Approved. Phases 5-11 complete; phase 12 not yet started.
-**Scope:** The kreb framework itself. The raylib FFI layer beneath it is designed separately in `2026-08-14-kreb-raylib-binding-design.md`.
+**Status:** Phases 0-4 complete and passing. The runtime-compilation approach was tested and rejected in phase 0; this document reflects the prebuilt-shim design that replaced it.
+**Scope:** Layer 0 of kreb — the FFI binding between Bun and raylib. The kreb game framework is designed separately in `2026-08-14-kreb-framework-design.md`.
 
-## What kreb is
+## Purpose
 
-kreb is a game framework for Bun, built on raylib, supporting 2D and 3D from the first release.
+kreb is a game framework for Bun built on raylib. This document specifies the layer underneath it: a Bun FFI binding that exposes raylib to TypeScript.
 
-It is a **framework, not a library**. Inversion of control is the organising principle: kreb owns the entry point, the main loop, the frame, resource lifetime, and the build workflow. Users declare; kreb sequences. There is no user-written game loop.
+This layer is **internal**. It is never published as a public package and has no public entrypoint. kreb ships no escape hatch to raw raylib, so nothing outside the framework imports this layer. Its only consumer is `packages/kreb`.
 
-Games are authored **in code only**. There is no scene serialization format, no visual editor, and no reflection over node properties. This removes stable node identifiers, an inspector protocol, and a data format from the design entirely.
+That constraint sets the coverage requirement. Because users cannot reach past the framework, any raylib capability a real game needs must eventually be bound here and surfaced as framework API. Coverage is driven by framework need, not by completeness for its own sake.
 
-There is **no escape hatch**. The raylib binding layer is private and unreachable from user code. Every capability a real game needs must ship as first-class framework API.
+## The core problem
 
-## DX invariants
+raylib passes structs by value throughout its API — `Vector2`, `Vector3`, `Color`, `Rectangle`, `Camera2D`, `Camera3D`. Bun's `dlopen` supports only scalars and pointers. It cannot pass or return a struct by value, which rules out a direct `dlopen` binding for a large fraction of raylib.
 
-These are binding on every API in the framework and serve as the review checklist for any addition.
+The solution is a C shim layer that flattens every struct into scalars or pointers at the JavaScript boundary. The shim is compiled ahead of time by a real C compiler and loaded with `dlopen`. Compiling it at runtime with `cc` from `bun:ffi` was the original plan and was rejected in phase 0 — see the phase 0 outcome section below.
 
-1. **No strings for structure.** No node paths, no signal names, no component keys, no asset path lookups at the point of use. Strings are for text the player sees.
-2. **No nullable returns in the hot path.** Getting a child, an asset, or a camera either succeeds or throws an error naming the fix. Optionals are reserved for genuinely optional things.
-3. **One way to do each thing.** Every "you can also…" is a DX defect until proven otherwise.
-4. **No magic method names.** Lifecycle hooks are declared on a base class or interface, discoverable by autocomplete, never matched by string.
-5. **Resources have owners.** Every handle belongs to a scene, a node, or a `using` block. There is no global cache with unclear lifetime.
-6. **Errors name the object and the fix**, not the internal invariant. For example: `Cannot draw Sprite "player": texture disposed at scene exit. Load it in this scene's assets.`
-7. **Autocomplete is the documentation.** If discovering an API requires the documentation site, the API is wrong.
+## Architecture
 
-Invariants 2 and 3 will be uncomfortable in practice. Invariant 2 rules out the forgiving null-returning lookups that Unity users expect. Invariant 3 will eventually mean refusing a convenience wrapper that someone reasonably wants. Both are accepted deliberately.
+```
+vendor/raylib-api/*.json      pinned raylib 6.0 API description, committed
+        │  codegen runs at development time; output is committed
+        ▼
+native/kreb_shim.c            flat C wrappers — no struct-by-value at the JS boundary
+generated/*.ts                FFI symbol tables, typed wrappers, enums, constants
+        │  compiled per platform in CI by the system C compiler
+        ▼
+build/<platform>-<arch>/libkreb_raylib.so    shipped prebuilt
+        │  dlopen at import time; links against
+        ▼
+~/.cache/kreb/raylib-6.0-<platform>-<arch>/{include,lib}   fetched by postinstall
+```
 
-### What these are reacting to
+Codegen output is committed rather than generated at install time. Diffs are reviewable, installs stay offline apart from the raylib download, and a bad codegen change cannot silently break users.
 
-| Engine | The DX failure | kreb's answer |
+## ABI mapping
+
+`tools/codegen/typemap.ts` is the single source of truth for this table. Both the C emitter and the TypeScript emitter read it, so the two sides cannot drift.
+
+| raylib C type | Shim signature | TypeScript surface |
 | --- | --- | --- |
-| Godot | `get_node("../../Player")` — structural strings; renaming breaks at runtime with no compiler help | typed direct references |
-| Unity | `GetComponent<T>()` returns null; string-matched `Update()`; opaque execution order | no nullable lookups in the hot path; explicit, visible call order |
-| Unity, Godot | untyped signals — `emit("died", args)` | typed event objects, checked at compile time |
-| Three.js | dispose hell; resource leaks are silent and normal | ownership plus dispose guards from the binding layer; leaks warn loudly |
-| Phaser | a god object — everything hangs off `this.scene.add.*` | no central registry object |
-| Love2D | no structure at all | a scene tree, with optional depth |
+| `Vector2` | `float x, float y` | `{x, y}` |
+| `Vector3` | `float x, float y, float z` | `{x, y, z}` |
+| `Vector4`, `Quaternion` | four `float` | `{x, y, z, w}` |
+| `Color` | `uint32_t` packed RGBA | `{r, g, b, a}` |
+| `Rectangle` | `float x, y, width, height` | `{x, y, width, height}` |
+| `Matrix` | `const float*` (16 elements) | `Float32Array` |
+| returns `Vector2`/`Vector3`/`Rectangle` | trailing `float* out` | unpacked from scratch buffer |
+| returns `Color` | returns `uint32_t` | `{r, g, b, a}` |
+| resource structs | heap-allocated, `void*` | opaque handle class |
+| `const char*` return | `cstring` | `string` |
+| function pointer args | `void*` | `JSCallback` |
 
-The common thread is stringly-typed structure and nullable lookups. Both are fully solvable in TypeScript and neither is solvable in GDScript or C# as those engines are shaped. That is kreb's actual opening — not a nicer API surface, but a type system the incumbents cannot retrofit.
+Resource structs are `Texture2D`, `RenderTexture2D`, `Image`, `Font`, `Shader`, `Model`, `Mesh`, `Material`, `ModelAnimation`, `Sound`, `Music`, `Wave`, `AudioStream`, `Camera2D`, and `Camera3D`.
 
-## Render passes and draw contexts
+Cameras are handles rather than value objects because raylib mutates them through pointers — `UpdateCamera(&camera, mode)`. Representing a camera as a JavaScript value object would silently discard those mutations.
 
-This is the central architectural decision, and it falls out of supporting 2D and 3D simultaneously.
+Struct returns unpack through one module-level scratch `Float32Array`. The shim writes into it and JavaScript reads the values out before any other call can run. This is safe because the runtime is single-threaded.
 
-raylib requires bracketing: 3D draws must occur inside `BeginMode3D`/`EndMode3D`, 2D world draws inside `BeginMode2D`/`EndMode2D`, and UI outside both. A depth-first traversal that draws as it walks cannot produce that ordering — a 2D health bar parented to a 3D enemy would emit its draw call in the middle of the 3D pass.
+## Phase 0 outcome: TinyCC rejected
 
-So traversal collects rather than draws. Each drawable is bucketed by its own node type, then buckets execute in a fixed order:
+The original design compiled the shim at import time with `cc` from `bun:ffi`, which uses TinyCC. Phase 0 tested that assumption before any other work, and it failed.
 
-```
-WORLD_3D   BeginMode3D(camera3d) … EndMode3D    sorted by material, then depth
-WORLD_2D   BeginMode2D(camera2d) … EndMode2D    sorted by zIndex
-UI         screen space, no camera              sorted by zIndex
-```
+Measured on Bun 1.3.14, GCC 16.2.1, raylib 6.0, linux x64. Ten probes covering every SysV AMD64 struct class were compiled both ways and diffed. GCC produced correct results throughout; TinyCC disagreed on eight of ten:
 
-Buckets are reused arrays cleared each frame rather than reallocated. This design also provides 2D z-sorting, which a direct-draw tree cannot do at all, and gives frustum culling a natural home later.
+| Probe | Struct class | TinyCC | GCC |
+| --- | --- | --- | --- |
+| `GetColor` | 4-byte return, alone | agrees | agrees |
+| `ColorToInt` | 4-byte arg, alone | agrees | agrees |
+| `Fade` | 4-byte in and out plus float | `0x1fe0007f` | `0xff00007f` |
+| `ColorFromHSV` | floats in, 4-byte out | `0x000000ff` | `0xff0000ff` |
+| `ColorToHSV` | 12-byte SSE return | `[111.7, 1, 0.88]` | `[0, 1, 1]` |
+| `CheckCollisionRecs` | two 16-byte SSE args | `0` | `1` |
+| `GetCollisionRec` | 16-byte SSE return | `[0, 0, 0, 0]` | `[5, 5, 5, 5]` |
+| `CheckCollisionPointRec` | 8-byte and 16-byte SSE | `0` | `1` |
+| `GetWorldToScreen2D` | 24-byte MEMORY arg | `[NaN, NaN]` | `[120, 90]` |
+| `GetCameraMatrix` | 44-byte MEMORY in, 64-byte sret | all `NaN` | correct |
 
-Correct usage is then enforced by the type system. Three context types exist, each handed to the node by the framework during the matching pass. None are constructible by user code, and there is no global draw function.
+The result was reproduced with raylib removed entirely, calling a hand-written GCC shared library, which rules out a `raylib.h` parsing fault. In that isolated form TinyCC handled a 4-byte integer-class struct argument correctly and failed a 4-byte struct return, a 12-byte float struct return, two 16-byte float struct arguments, and an 8-byte float struct passed in and returned.
 
-```ts
-class Player extends Node2D {
-  update(dt: number) {
-    this.position.x += this.speed * dt
-    // no draw API is reachable here
-  }
+The pattern: **TinyCC handles integer-class struct arguments and nothing else.** Structs containing floats are wrong in both directions, and struct returns are wrong generally. `Vector2`, `Vector3`, and `Rectangle` are the most-used types in raylib's API, so runtime compilation is unusable — and this was x86_64, TinyCC's best-supported target, so aarch64 and Windows could only be worse.
 
-  draw(g: Draw2D) {
-    g.sprite(this.tex, this.position)
-    // g.screenRect(...) does not exist on Draw2D — compile error
-  }
-}
+The documented contingency was taken. The same probe C compiled by the system compiler and loaded via `dlopen` passes all eleven assertions, so the fallback was verified in the same session rather than assumed. The codegen and TypeScript layers were unaffected, exactly as the risk analysis predicted.
 
-class Enemy extends Node3D {
-  draw(g: Draw3D) { g.model(this.mesh) }
-}
+These probes are retained permanently as `test/nogl/abi.test.ts`, now run against the prebuilt path. A raylib version bump can change a struct layout silently and nothing else in the suite would catch it.
 
-class Hud extends NodeUI {
-  draw(g: DrawUI) { g.text("Score", 10, 10) }
-}
-```
+## Build and distribution
 
-Drawing outside `draw()`, drawing into the wrong space, and forgetting `BeginDrawing`/`EndDrawing` are all unrepresentable. `BeginDrawing`, `EndDrawing`, and `BeginMode*` do not appear in the public API.
+`scripts/build-shim.ts` compiles `native/*.c` into a single shared library per platform, linking raylib with an rpath pointing at the cache directory so the loader resolves `libraylib` without the caller setting `LD_LIBRARY_PATH` before process start. It skips the compile when the output is newer than every input.
 
-State changes use scoped methods rather than push/pop pairs, so a bracket cannot be left unbalanced:
+CI runs this once per platform and architecture. The resulting binaries ship as `optionalDependencies` — one package per target, the pattern esbuild and sharp use — so users need no toolchain. Locally the script runs on demand for development and tests, which does require a system compiler; that requirement applies to contributors only, never to users.
 
-```ts
-interface Draw2D {
-  sprite(tex: Texture, at: Vector2, opts?: SpriteOpts): void
-  text(s: string, at: Vector2, opts?: TextOpts): void
-  line(a: Vector2, b: Vector2, opts?: StrokeOpts): void
-  rect(r: Rect, opts?: FillOpts): void
-  withShader(s: Shader, body: (g: Draw2D) => void): void
-  withBlend(m: BlendMode, body: (g: Draw2D) => void): void
-}
-```
+Targets: `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64`, `win32-arm64`.
 
-`Draw3D` and `DrawUI` follow the same shape with their own primitives.
+## raylib acquisition
 
-## Nodes
+A postinstall script downloads the official raylib release archive for the current platform and architecture, verifies it against a pinned SHA-256, and unpacks `include/` and `lib/` into `~/.cache/kreb/raylib-<version>-<platform>-<arch>/`. The version is pinned in `src/raylib-path.ts` alongside the vendored API JSON.
+
+raylib 6.0 is the pinned version. Its release assets were checked during phase 0 and cover every target: `linux_amd64`, `linux_arm64`, `macos` (universal), `win64_msvc16`, `win32_msvc16`, and `winarm64_msvc16`. The `linux_arm64` question raised in the original design is resolved — the asset exists, so no platform needs a source build.
+
+A test asserts that the downloaded raylib's `RAYLIB_VERSION` matches the vendored API description. Silent skew between the two would produce incorrect struct layouts with no error, which is the worst available failure mode.
+
+## Resource handles
 
 ```ts
-abstract class Node {
-  name: string
-  readonly children: readonly Node[]
-  readonly parent: Node | null
-
-  ready(): void          // once, after entering the tree
-  update(dt: number): void   // fixed timestep
-  exitTree(): void
-  destroy(): void        // recursive; disposes owned handles
-}
-
-class Node2D extends Node {
-  position: Vector2; rotation: number; scale: Vector2; zIndex: number
-  draw(g: Draw2D): void
-}
-
-class Node3D extends Node {
-  position: Vector3; rotation: Quaternion; scale: Vector3
-  draw(g: Draw3D): void
-}
-
-class NodeUI extends Node {
-  anchor: Anchor; offset: Rect; zIndex: number
-  draw(g: DrawUI): void
+class Texture2D {
+  readonly ptr: Pointer
+  get width(): number
+  get height(): number
+  get id(): number
+  [Symbol.dispose](): void
 }
 ```
 
-Cameras are nodes too — `Camera2D extends Node2D` and `Camera3D extends Node3D`, each wrapping a binding-layer camera handle and driving it from its own world transform. A scene designates one active camera per world space; the render pass reads them when opening `BeginMode2D` and `BeginMode3D`. Making cameras nodes means a camera can be parented to a player and inherit its transform for free, and it keeps the "no central registry" rule intact.
+Rules:
 
-`Scene` is itself a node type — the root of the tree, owning the asset scope, the tween runner, the collision world, and the active camera references. Its lifecycle hooks match `Node`.
+- Every handle carries a disposed flag. Use after dispose throws an error naming the resource, rather than passing a dangling pointer into OpenGL and crashing the process.
+- Double dispose is a no-op.
+- There is no `FinalizationRegistry` auto-unload. Garbage collection timing is nondeterministic, and unloading a texture is an OpenGL call — running one after `CloseWindow` is a hard crash. In development mode only, a `FinalizationRegistry` warns about handles collected while still live, so leaks are visible without being fatal.
+- `Load*` functions throw on failure rather than returning a zero-id handle. raylib's convention of `texture.id == 0` silently no-ops on draw; throwing surfaces the problem at the call site.
 
-The hierarchy is deliberately shallow: one abstract base, three concrete node types plus cameras and `Scene`, with no deeper chain.
+## Module scope
 
-World transforms compose from the parent and are cached behind a dirty flag that propagates to descendants on mutation. For 3D this matters more than it appears — raylib's `DrawModelEx` takes position, axis, angle, and scale, which cannot express a nested or sheared hierarchy. kreb writes the composed matrix into `model.transform` and calls `DrawModel`, which is the only route that makes arbitrary 3D nesting correct.
+**In scope for v1:** all of `raylib.h` as described by `raylib_api.json` — core, shapes, textures, text, models, and audio.
 
-A `Node2D` may parent a `Node3D` and the reverse. Bucket assignment follows the node's own type, not its ancestors'.
+**Explicitly excluded from v1:**
 
-## Composition is plain fields
-
-There is no attach API, no component registry, and no lookup by token.
-
-```ts
-class Enemy extends Node3D {
-  health = new Health(100)
-  blink  = new Blinker(0.2)
-
-  update(dt: number) {
-    this.blink.update(dt)
-    if (this.health.dead) this.destroy()
-  }
-
-  draw(g: Draw3D) { g.model(this.mesh, { tint: this.blink.tint }) }
-}
-
-enemy.health.damage(10)
-```
-
-TypeScript already has composition; it does not need a framework registry to provide it. Removing the component system deletes the attach and detach API, the registry, behavior lifecycle wiring, execution-order rules, and every lookup that could return undefined. The cost is that the owner calls `this.blink.update(dt)` explicitly — one visible line replacing hidden machinery, which also makes update order readable in the source instead of framework-defined.
-
-This is the DRY tradeoff made deliberately: the small repetition of forwarding `update` is cheaper than a subsystem that exists to eliminate it.
-
-**Colliders and particle emitters are the exception** — they are nodes rather than plain fields, because the framework must discover them to run broadphase and to batch draws, and a plain field is invisible to it. Making them nodes means the traversal that buckets drawables also collects them, with no registry and no reflection. When the alternative to a small inconsistency is a hidden subsystem, the inconsistency is preferable.
-
-## Main loop
-
-Fixed-timestep accumulator with clamped delta time, variable render rate:
-
-```
-accumulate real dt, clamped so a debugger pause cannot spiral
-while (acc >= STEP) { update(STEP); acc -= STEP }
-render(alpha = acc / STEP)
-```
-
-Fixed update keeps movement and collision deterministic and framerate-independent. `alpha` is passed to the render pass so nodes can interpolate between previous and current transforms, but v1 does not interpolate by default — that doubles transform storage and is a drop-in addition once there is a real game to judge the jitter against.
-
-## Scenes and entry point
-
-A scene is a root node plus an asset scope. Assets loaded under a scene's scope are released when it exits, which is what prevents texture and model handles leaking across level transitions. `SceneManager` supports `change(scene)` plus `push`/`pop`, so a pause menu or inventory overlays the running scene without tearing it down.
-
-```ts
-// src/main.ts
-export default kreb.game({
-  window: { width: 1280, height: 720, title: "kreb" },
-  scenes: { menu: MenuScene, level1: Level1 },
-  start: "menu",
-})
-```
-
-The CLI owns the workflow: `kreb new`, `kreb dev` (hot reload configured for you), `kreb build`, `kreb ship`. Users never assemble Bun flags by hand. Project layout is fixed by convention — `src/scenes/`, `src/entities/`, `assets/` — so the asset pipeline knows where things are with no path configuration.
-
-## Hot reload
-
-Scoped to **assets and behavior code**, not full state preservation. Swapping a sprite or an update function keeps positions and the running scene alive. Preserving arbitrary live state across a module swap would require the framework to serialize the node graph, and code-only authoring means there is no serialization format to do it with. Full state preservation is explicitly out of scope.
-
-## Assets
-
-Two constraints shape this. raylib's loaders are synchronous and blocking, texture upload requires the OpenGL context on the main thread, and Bun's FFI calls are synchronous. A `Promise`-returning asset API would therefore be theatre — the frame blocks regardless.
-
-v1 uses a **budgeted loader**: during a loading screen kreb loads until a per-frame time budget is spent, then yields so the window stays responsive and progress animates. True background decode — decoding pixels in a Worker and uploading on the main thread — is a later optimization with a clear seam.
-
-Asset paths are not strings at the point of use. `kreb dev` scans `assets/` and generates a typed manifest:
-
-```ts
-import { Assets } from "kreb/generated"
-
-class Level1 extends Scene {
-  tex = this.assets.load(Assets.textures.player)
-  // Assets.textures.playr — compile error, no such file
-}
-```
-
-Renaming a file becomes a compile error rather than a runtime crash, satisfying invariant 1 at the one place every other engine leaks strings.
-
-Assets are scene-scoped by default with reference counting, so a texture shared by two scenes survives the transition and releases at zero. A `global` scope exists for assets that outlive all scenes, such as fonts and the UI atlas.
-
-## Input
-
-Actions are declared values, never strings:
-
-```ts
-export const Act = kreb.actions({
-  jump: [Key.Space, Pad.A],
-  move: kreb.axis2({ up: Key.W, down: Key.S, left: Key.A, right: Key.D }, Pad.LeftStick),
-})
-
-if (input.pressed(Act.jump)) this.velocity.y = JUMP
-const dir = input.axis(Act.move)   // Vector2, deadzone applied
-```
-
-**Fixed timestep breaks naive edge detection**, and handling it correctly is a requirement rather than a refinement. raylib polls input once per frame, but `update` may run zero, one, or several times within that frame. Polled naively, a jump either fires repeatedly or is swallowed entirely. kreb latches edges per frame and delivers `pressed` on exactly the first fixed step that observes it, carrying unconsumed edges to the next step rather than dropping them. This class of bug is invisible until someone plays at 30fps, and it is untestable by hand — it is covered by headless tests.
-
-## Collision
-
-**No rigid-body dynamics in v1.** No mass, no restitution, no solver. Detection, queries, and callbacks only. A dynamics engine is a project comparable in size to the rest of the framework; wrapping Rapier's WebAssembly build is the sensible path if it is ever wanted. Stating this now prevents "physics" from meaning two different things later.
-
-```ts
-class Player extends Node2D {
-  body = new BoxCollider2D(this, { size: { x: 16, y: 32 }, layer: Layer.Player })
-
-  onEnter(other: Collider2D) {
-    if (other.layer === Layer.Hazard) this.health.damage(10)
-  }
-}
-```
-
-Shapes are AABB, circle, and ray in 2D, and AABB, sphere, ray, and mesh in 3D. One spatial-hash broadphase is parameterized over dimension rather than duplicated. Layers and masks are typed bitflags. Queries such as `raycast` and `overlap` return typed hits, and "nothing hit" is an empty result rather than null.
-
-## UI
-
-kreb draws its own widgets using `DrawUI` primitives. raygui is not used.
-
-raygui is immediate-mode with global styling and C-side widget state. Under a retained `NodeUI` tree, kreb owns layout, anchoring, focus, and event routing regardless, so raygui would contribute only pixels and hit-testing — both of which would then need duplicating to agree with kreb's layout. It is also the largest single source of TinyCC risk in the binding layer, since compiling it means compiling roughly 5000 lines of `RAYGUI_IMPLEMENTATION`.
-
-The cost is real: layout, focus, keyboard navigation, and text input are kreb's to build. v1 stays deliberately small — panel, label, button, slider, checkbox, single-line text input, and anchor-based layout. That is enough for menus, HUDs, and settings screens, and is explicitly not a general-purpose UI toolkit.
-
-## Extras
-
-**Tweens** use a callback form rather than property-name strings:
-
-```ts
-this.tweens.run(0.5, Ease.OutQuad, t => {
-  this.position.x = lerp(startX, endX, t)
-})
-```
-
-The conventional `tween(obj, { x: 100 })` API requires string property keys and loses type safety on nested paths. The callback is simpler, fully typed, and can drive anything — a color, a shader uniform, or several values at once. The scene owns the runner and ticks it.
-
-**Timers** are plain fields (`timer = new Timer(2.0)`) ticked by their owner, consistent with the composition rule.
-
-**Particle emitters** are nodes, for the discovery reason given above. 2D emitters batch through `Draw2D`; 3D emitters use billboards.
-
-**State machines** are typed transition tables with no string states:
-
-```ts
-const state = kreb.fsm({
-  idle:     { onJump: "airborne" },
-  airborne: { onLand: "idle" },
-})
-```
-
-**Math** ships as its own package, `@kreb/math` — `raymath` reimplemented in pure TypeScript covering vectors, matrices, and quaternions. This avoids an FFI crossing per call and is strictly faster than binding header-only inline C. It is separate rather than a framework folder because it has no native dependency at all: no shim, no raylib download, no GPU. That makes it independently testable and usable on its own.
+- **rlgl.** Its only purpose is exposing low-level rendering to end users. With no escape hatch it has no consumer except the framework's own internals, which do not currently need it. Bind it if and when a framework feature requires it.
+- **raygui.** The framework draws its UI natively. Binding raygui would also require TinyCC to compile roughly 5000 lines of `RAYGUI_IMPLEMENTATION`, which is a far larger compile surface than the shim and the largest single source of TinyCC risk.
+- **raymath.** It is header-only inline C. It is reimplemented in pure TypeScript in `packages/kreb-math`, which avoids an FFI crossing per call and is strictly faster than binding it. `native/raymath_probe.c` exposes the C originals to that package's parity tests and is test-only.
 
 ## Package layout
 
 ```
-packages/raylib-sys/     private, never published, no public entrypoint
-                         (see the binding layer design document)
-
-packages/kreb-math/      @kreb/math — raymath port, pure TypeScript, no native
-                         dependency, so it stands alone and is usable without
-                         a window or a GPU
-
-packages/kreb/           public
-  src/core/              loop, Node, Node2D, Node3D, NodeUI, transforms, render passes
-  src/draw/              Draw2D, Draw3D, DrawUI
-  src/scene/             Scene, SceneManager
-  src/assets/            budgeted loader, scopes, reference counting
-  src/input/             actions, edge latching, gamepad
-  src/collision/         shapes, spatial hash, queries, layers
-  src/ui/                widgets, anchor layout, focus
-  src/extras/            tweens, timers, particles, FSM
-  src/cli/               new, dev, build, ship
-  bin/kreb
+packages/raylib-sys/
+  vendor/raylib-api/raylib_api.json
+  tools/codegen/
+    load-api.ts        parse and validate the API description
+    typemap.ts         the ABI table above — single source of truth
+    emit-c.ts          emits native/kreb_shim.c
+    emit-ts.ts         emits generated/*.ts
+    __snapshots__/     golden output
+  generated/           GENERATED, committed
+    raylib.ts  enums.ts  colors.ts
+  native/
+    kreb_shim.c        GENERATED, committed
+    abi_probe.c        hand-written, phase 0, retained as regression tests
+  build/<platform>-<arch>/libkreb_raylib.<so|dylib|dll>   built by CI, shipped
+  src/
+    raylib-path.ts     pinned version, cache location
+    loader.ts          locate the prebuilt shim, dlopen, cache the handle
+    handles.ts         handle base class, dispose, use-after-free guard
+    scratch.ts         shared struct-return buffer
+  scripts/
+    build-shim.ts      compile native/*.c with the system compiler
+    postinstall.ts     download and verify the raylib release
+    codegen.ts
+  test/codegen/  test/nogl/  test/gl/
 ```
 
-Bun workspaces. The raylib split exists because the binding has a genuinely different build story — codegen, native source, a postinstall downloader, a platform matrix — and folding that into the framework's test loop would slow down every framework change.
+The package is private and has no public entrypoint.
 
 ## Testing
 
-**Headless logic tests** cover more of this framework than expected, and are where the subtle bugs live: transform composition, dirty-flag propagation, render-pass bucketing and sort order, input edge latching across varying fixed-step counts, asset reference counting and scope release, the spatial hash, collision queries, tweens, the FSM, and math parity against C raymath. None of this needs a window or a GPU.
+**`test/codegen/`** is pure and runs anywhere with no raylib present. API description fragments go through the emitters and the output is compared against committed golden files. This is where the ABI table gets its coverage, and it catches mapping regressions immediately.
 
-**Golden-image tests** cover the renderer: draw a fixed scene into a `RenderTexture`, export it, and compare against a committed reference PNG within a tolerance. This runs under `xvfb` with Mesa on Linux CI. It is the only way to catch a render-pass ordering regression, and it requires `RenderTexture2D` to be bound during binding-layer phase 3.
+**`test/nogl/`** requires `libraylib` but no window or GPU. This tier is larger than it first appears: CPU image operations (`LoadImage`, `ImageResize`, `ImageCrop`, `ExportImage`), color math (`GetColor`, `ColorToInt`, `Fade`, `ColorFromHSV`), file and compression utilities, and `Wave` decoding. The phase 0 ABI probes live here permanently — struct round-trips are exactly what breaks silently across a TinyCC or raylib version bump.
 
-Linux CI runs everything. macOS and Windows run the logic tier only. The README states this rather than implying uniform coverage.
+**`test/gl/`** requires a display. It covers `InitWindow`, drawing a frame, `LoadTextureFromImage`, reading back pixels, and `CloseWindow`. On Linux CI it runs under `xvfb-run` with Mesa llvmpipe.
+
+macOS and Windows CI run the codegen and nogl tiers only. Headless OpenGL on those runners is more trouble than it is worth, and the ABI risk they carry is already covered by the nogl struct probes. The README states this rather than implying uniform coverage.
 
 ## Phases
 
-Binding phases 0 through 4 are specified in the binding layer design document. Framework phases follow, continuing the same numbering.
-
 | Phase | Deliverable | Complete when |
 | --- | --- | --- |
-| 5 | **Done.** raymath in pure TypeScript | 146 functions ported; parity verified against C raymath through a probe shim |
-| 6 | **Done.** Core: loop, nodes, transforms, render passes, draw contexts, scenes | demo runs a bouncing sprite, two orbiting 3D cubes and a HUD in one frame; 30 framework tests |
-| 7 | **Done.** Assets, CLI, typed manifest | `kreb new` scaffolds, `kreb build` generates the manifest, `kreb dev`/`run` launch through the framework's own runner; verified end to end outside the repo |
-| 8 | **Done.** Input actions and edge latching | a press reaches exactly one fixed step at 30fps, and an edge seen during a stepless frame is carried rather than dropped |
-| 9 | **Done.** Collision | 2D and 3D overlap, raycast and layer masks share one dimension-agnostic implementation; enter/exit callbacks fire from inside the fixed step |
-| 10 | **Done.** Native UI | panel, label, button, checkbox, slider and text input with anchor layout, pointer and keyboard focus; the demo has a settings screen overlaying the level |
-| 11 | **Done.** Extras | callback tweens with delay, repeat and ping-pong; timers reporting every period a long frame spans; a pooled particle system shared by 2D and 3D emitters; typed state machines |
-| 12 | Documentation, examples, publish | |
+| 0 | **Done.** ABI spike, platform asset check, TinyCC rejected, prebuilt path verified | struct round-trips correct on the prebuilt path; 11 of 11 probes pass on linux-x64 |
+| 1 | **Done.** `postinstall.ts`, `loader.ts`, six-target CI matrix | clean install downloads and checksum-verifies raylib; loader dlopens the prebuilt shim |
+| 2 | **Done, then removed as superseded.** Hand-written 18-function shim | window opened and drew; deleted once phase 3 passed the same assertions |
+| 3 | **Done.** Codegen over all of `raylib.h` | 598 of 600 functions generated, 624 exported symbols, zero compiler warnings; only the two variadic functions skipped |
+| 4 | **Done.** Resource handles | 10 handle classes; use-after-dispose throws naming the resource, failed loads throw, ownership transfer via `disown()` |
 
-Phase 6 is the real milestone — the first point at which kreb is a thing rather than a plan. Everything before it is infrastructure, and the earlier phases should be optimized for reaching phase 6 rather than for completeness.
+Phase 2 exists separately from phase 3 deliberately. It is cheap, and it means that when generated code first fails, the loader, the download, and the ABI are already known good, so the bug is in the emitter.
 
-## Risks
+`RenderTexture2D` must be bound during phase 3 — the framework's golden-image tests depend on it.
 
-1. **~~Binding phase 0 can invalidate the approach.~~ Resolved 2026-08-14.** TinyCC's struct ABI turned out to be broken on x86_64, not merely uncertain on aarch64 — it mishandles every struct containing floats and nearly every struct return, which covers `Vector2`, `Vector3`, and `Rectangle`. The prebuilt-shim fallback was taken and verified. The residual cost is a six-target CI build matrix; the framework design is unaffected. Details in the binding layer document.
-2. **No escape hatch makes coverage mandatory.** Custom shaders, render textures, blend modes, scissor, custom meshes, instancing, and skeletal animation must all ship as first-class API. This generates work continuously after v1 — it is a permanent tax rather than a phase.
-3. **The project is large.** Twelve phases, of which native UI and the full 3D API surface are each sizable on their own. The scope was chosen deliberately; it is recorded here so the timeline is not a surprise.
+## Open items
 
-## Decisions deliberately deferred
+Phase 0 is resolved and the design updated accordingly. Two items move into phase 1:
 
-- Transform interpolation between fixed steps. Storage is designed to accommodate it; v1 does not implement it.
-- True background asset decode using Workers. The budgeted loader provides the seam.
-- Rigid-body dynamics, most likely via Rapier.
-- rlgl bindings, if and when a framework feature requires them.
-- Allocation-free hot-path draw variants, pending profiling evidence that they are needed.
+- **CI build matrix.** Six targets need runners or cross-compilation. `darwin-arm64` and `win32-arm64` in particular need confirmed runner availability.
+- ~~**`optionalDependencies` packaging.**~~ Resolved: `scripts/pack-platform.ts` emits `kreb-<target>` packages carrying one binary each, selected by npm through `os`/`cpu`. The loader prefers a local build and falls back to the platform package, naming both locations when neither exists.
+
+The struct-ABI probes were only run on linux-x64. They must run on every target in CI before v1 — a prebuilt shim removes the TinyCC fault but does not by itself prove raylib's struct layout matches expectations on aarch64 or Windows.

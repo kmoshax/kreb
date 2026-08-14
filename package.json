@@ -1,6 +1,5 @@
 {
-	"name": "kreb",
-	"module": "src/index.ts",
+	"name": "kreb-monorepo",
 	"type": "module",
 	"private": true,
 	"workspaces": [
@@ -11,13 +10,23 @@
 		"check:fix": "biome check --write",
 		"format": "biome format --write",
 		"lint": "biome lint",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"version:set": "bun scripts/set-version.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.8",
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"kreb": "workspace:*",
+		"@kreb/math": "workspace:*",
+		"@kreb/raylib-sys": "workspace:*"
 	},
 	"peerDependencies": {
 		"typescript": "^7.0.2"
+	},
+	"description": "kreb monorepo: a game framework for Bun built on raylib.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/kmoshax/kreb.git"
 	}
 }

@@ -1,10 +1,36 @@
 {
 	"name": "@kreb/math",
-	"version": "0.0.0",
-	"private": true,
+	"version": "0.1.0",
+	"private": false,
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
 		"./*": "./src/*.ts"
-	}
+	},
+	"description": "raylib's raymath ported to TypeScript. Vectors, matrices, quaternions, no native dependency.",
+	"keywords": [
+		"math",
+		"vector",
+		"matrix",
+		"quaternion",
+		"raymath",
+		"raylib",
+		"gamedev"
+	],
+	"license": "MIT",
+	"author": "kmoshax",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/kmoshax/kreb.git",
+		"directory": "packages/kreb-math"
+	},
+	"homepage": "https://github.com/kmoshax/kreb#readme",
+	"bugs": "https://github.com/kmoshax/kreb/issues",
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"src",
+		"README.md"
+	]
 }

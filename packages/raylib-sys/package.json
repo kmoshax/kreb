@@ -1,7 +1,7 @@
 {
 	"name": "@kreb/raylib-sys",
-	"version": "0.0.0",
-	"private": true,
+	"version": "0.1.0",
+	"private": false,
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
@@ -18,6 +18,42 @@
 		"postinstall": "bun scripts/postinstall.ts",
 		"build:shim": "bun scripts/build-shim.ts",
 		"codegen": "bun scripts/codegen.ts",
-		"vendor:api": "bun scripts/vendor-api.ts"
-	}
+		"vendor:api": "bun scripts/vendor-api.ts",
+		"pack:platform": "bun scripts/pack-platform.ts"
+	},
+	"description": "Internal raylib FFI layer for kreb. No public entrypoint.",
+	"keywords": [
+		"raylib",
+		"ffi",
+		"bun",
+		"internal"
+	],
+	"license": "MIT",
+	"author": "kmoshax",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/kmoshax/kreb.git",
+		"directory": "packages/raylib-sys"
+	},
+	"homepage": "https://github.com/kmoshax/kreb#readme",
+	"bugs": "https://github.com/kmoshax/kreb/issues",
+	"publishConfig": {
+		"access": "public"
+	},
+	"optionalDependencies": {
+		"kreb-linux-x64": "0.1.0",
+		"kreb-linux-arm64": "0.1.0",
+		"kreb-darwin-x64": "0.1.0",
+		"kreb-darwin-arm64": "0.1.0",
+		"kreb-win32-x64": "0.1.0",
+		"kreb-win32-arm64": "0.1.0"
+	},
+	"files": [
+		"src",
+		"generated",
+		"native",
+		"scripts",
+		"vendor",
+		"README.md"
+	]
 }
