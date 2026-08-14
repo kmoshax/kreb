@@ -139,7 +139,9 @@ export class UiSystem {
 	}
 
 	#walk(node: Node): void {
-		if (node.destroyed) return;
+		// Hidden UI must not take clicks either, or a menu behind an overlay
+		// would still be reachable by the pointer.
+		if (node.destroyed || !node.visible) return;
 
 		if (isWidget(node)) this.#widgets.push(node);
 

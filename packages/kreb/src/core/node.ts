@@ -11,6 +11,9 @@ import type { Scene } from '../scene/scene.ts';
 export abstract class Node {
 	name: string;
 
+	/** Hides this node and everything under it from drawing and UI input. */
+	visible = true;
+
 	#parent: Node | null = null;
 	readonly #children: Node[] = [];
 	#inTree = false;

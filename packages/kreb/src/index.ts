@@ -1,3 +1,4 @@
+export * from '@kreb/math';
 export { Image, Mesh, Model, Shader, Texture } from '@kreb/raylib-sys';
 export {
 	GamepadAxis,

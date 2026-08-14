@@ -82,14 +82,18 @@ export class BoxCollider2D extends Collider2D {
 		g.rect(-this.size.x / 2, -this.size.y / 2, this.size.x, this.size.y, { color: this.color });
 	}
 
-	get volume(): Volume {
-		const { position, scale } = this.global;
+	/** Half the world-space size, which is what offset maths usually wants. */
+	get extents(): Vector2 {
+		const { scale } = this.global;
 
-		return {
-			kind: 'box',
-			center: [position.x, position.y],
-			half: [(this.size.x * Math.abs(scale.x)) / 2, (this.size.y * Math.abs(scale.y)) / 2],
-		};
+		return { x: (this.size.x * Math.abs(scale.x)) / 2, y: (this.size.y * Math.abs(scale.y)) / 2 };
+	}
+
+	get volume(): Volume {
+		const { position } = this.global;
+		const { x, y } = this.extents;
+
+		return { kind: 'box', center: [position.x, position.y], half: [x, y] };
 	}
 }
 

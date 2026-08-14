@@ -5,18 +5,18 @@ import {
 	actions,
 	axis2,
 	BoxCollider2D,
+	Clamp,
 	type Collider,
 	type DrawUI,
 	Ease,
 	fsm,
 	GOLD,
-	GRAY,
 	game,
 	hex,
 	input,
 	Key,
+	Label,
 	layer,
-	measureText,
 	NodeUI,
 	RAYWHITE,
 	Scene,
@@ -24,8 +24,6 @@ import {
 
 const W = 900;
 const H = 560;
-const PADDLE = [16, 110] as const;
-const BALL = 14;
 
 const Layer = { Paddle: layer(0), Ball: layer(1) };
 
@@ -37,18 +35,20 @@ const Act = actions({
 
 const score = { left: 0, right: 0 };
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-
 class Paddle extends BoxCollider2D {
+	speed = 460;
+
 	constructor(
 		private readonly axis: typeof Act.left,
 		x: number,
 	) {
-		super({ size: PADDLE, color: RAYWHITE, layer: Layer.Paddle, at: [x, H / 2] });
+		super({ size: [16, 110], color: RAYWHITE, layer: Layer.Paddle, at: [x, H / 2] });
 	}
 
 	override update(dt: number): void {
-		this.y = clamp(this.y + input.axis(this.axis).y * 460 * dt, PADDLE[1] / 2, H - PADDLE[1] / 2);
+		const limit = this.extents.y;
+
+		this.y = Clamp(this.y + input.axis(this.axis).y * this.speed * dt, limit, H - limit);
 	}
 }
 
@@ -61,40 +61,43 @@ class Ball extends BoxCollider2D {
 	});
 
 	constructor() {
-		super({ size: [BALL, BALL], color: GOLD, layer: Layer.Ball, mask: Layer.Paddle });
-		this.reset();
+		super({ size: [14, 14], color: GOLD, layer: Layer.Ball, mask: Layer.Paddle });
+		this.rest();
 	}
 
-	reset(): void {
+	rest(): void {
 		this.at(W / 2, H / 2);
 		this.velocity.x = 0;
 		this.velocity.y = 0;
 	}
 
-	// A paddle hit reverses the ball and adds spin from where it struck.
+	serve(): void {
+		this.velocity.x = Math.random() < 0.5 ? -360 : 360;
+		this.velocity.y = (Math.random() * 2 - 1) * 220;
+	}
+
+	// Bounce off the paddle, taking spin from how far off centre it struck.
 	override onEnter(other: Collider): void {
-		if (other.layer !== Layer.Paddle) return;
+		if (!(other instanceof Paddle)) return;
 
 		this.velocity.x *= -1.04;
-		this.velocity.y += ((this.y - (other as Paddle).y) / (PADDLE[1] / 2)) * 200;
+		this.velocity.y += ((this.y - other.y) / other.extents.y) * 200;
 		this.x += Math.sign(this.velocity.x) * 4;
 	}
 
 	override update(dt: number): void {
 		if (this.phase.is('waiting')) {
-			if (input.pressed(Act.serve) && this.phase.send('serve')) {
-				this.velocity.x = Math.random() < 0.5 ? -360 : 360;
-				this.velocity.y = (Math.random() * 2 - 1) * 220;
-			}
+			if (input.pressed(Act.serve) && this.phase.send('serve')) this.serve();
 			return;
 		}
 
 		this.x += this.velocity.x * dt;
 		this.y += this.velocity.y * dt;
 
-		if (this.y < BALL / 2 || this.y > H - BALL / 2) {
+		const limit = this.extents.y;
+		if (this.y < limit || this.y > H - limit) {
 			this.velocity.y *= -1;
-			this.y = clamp(this.y, BALL / 2, H - BALL / 2);
+			this.y = Clamp(this.y, limit, H - limit);
 		}
 
 		if (this.x < 0 || this.x > W) {
@@ -102,7 +105,7 @@ class Ball extends BoxCollider2D {
 			else score.left += 1;
 
 			this.phase.send('score');
-			this.reset();
+			this.rest();
 		}
 	}
 }
@@ -110,13 +113,13 @@ class Ball extends BoxCollider2D {
 class Scoreboard extends NodeUI {
 	flash = 0;
 
-	#total = 0;
+	#shown = -1;
 
 	override update(): void {
-		if (score.left + score.right === this.#total) return;
+		const total = score.left + score.right;
+		if (total === this.#shown) return;
 
-		this.#total = score.left + score.right;
-
+		this.#shown = total;
 		this.scene.tweens.run(0.5, Ease.OutCubic, (t) => {
 			this.flash = 1 - t;
 		});
@@ -130,30 +133,14 @@ class Scoreboard extends NodeUI {
 	}
 }
 
-const HINT = 'space to serve, W/S and arrows to move';
-
-class Hint extends NodeUI {
-	constructor(private readonly ball: Ball) {
-		super('hint');
-	}
-
-	protected override intrinsicSize() {
-		return { width: measureText(HINT, 18), height: 18 };
-	}
-
-	override draw(g: DrawUI): void {
-		if (!this.ball.phase.is('waiting')) return;
-
-		g.text(HINT, 0, 0, { size: 18, color: GRAY });
-	}
-}
-
 class Court extends Scene {
+	readonly ball = new Ball();
+	readonly hint = new Label('space to serve, W/S and arrows to move', 'hint');
+
 	override ready(): void {
 		this.add(new Paddle(Act.left, 40));
 		this.add(new Paddle(Act.right, W - 40));
-
-		const ball = this.add(new Ball());
+		this.add(this.ball);
 
 		this.add(new Scoreboard('score')).place({
 			anchor: Anchor.TopCenter,
@@ -163,7 +150,12 @@ class Court extends Scene {
 			height: 70,
 		});
 
-		this.add(new Hint(ball)).place({ anchor: Anchor.BottomCenter, x: -180, y: -40 });
+		this.hint.muted = true;
+		this.add(this.hint).place({ anchor: Anchor.BottomCenter, x: -180, y: -40 });
+	}
+
+	override update(): void {
+		this.hint.visible = this.ball.phase.is('waiting');
 	}
 }
 

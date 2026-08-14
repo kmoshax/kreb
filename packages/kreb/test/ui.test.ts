@@ -390,3 +390,26 @@ test('a node outside a scene says so instead of returning null', () => {
 
 	expect(() => orphan.scene).toThrow('is not inside a Scene');
 });
+
+test('a hidden widget takes no clicks', () => {
+	const { root, ui } = scene();
+
+	let presses = 0;
+	const button = root.add(
+		place(
+			new Button('ok', () => {
+				presses += 1;
+			}),
+			10,
+			10,
+			100,
+			30,
+		),
+	);
+	button.visible = false;
+
+	click(ui, root, 50, 20);
+
+	expect(presses).toBe(0);
+	expect(ui.size).toBe(1);
+});

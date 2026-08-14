@@ -299,3 +299,13 @@ test('destroyed colliders leave the world', () => {
 	world.collect(root);
 	expect(world.size).toBe(0);
 });
+
+test('a collider reports its own half-size, scale included', () => {
+	const parent = new Node2D('parent');
+	const box = parent.add(new BoxCollider2D({ size: [20, 40], name: 'box' }));
+
+	expect(box.extents).toEqual({ x: 10, y: 20 });
+
+	parent.scale.set({ x: 2, y: 2 });
+	expect(box.extents).toEqual({ x: 20, y: 40 });
+});

@@ -319,3 +319,18 @@ test('position shorthand and chainable placement', () => {
 	expect(node.at(1, 2)).toBe(node);
 	expect(node.y).toBe(2);
 });
+
+test('hiding a node hides everything under it', () => {
+	const root = new Node2D('root');
+	const parent = root.add(new Node2D('parent'));
+	parent.add(new Node2D('child'));
+
+	const queue = new RenderQueue();
+	queue.collect(root);
+	expect(queue.world2d.length).toBe(3);
+
+	parent.visible = false;
+	queue.collect(root);
+
+	expect(queue.world2d.map((n) => n.name)).toEqual(['root']);
+});

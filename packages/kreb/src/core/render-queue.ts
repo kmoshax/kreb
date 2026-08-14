@@ -45,7 +45,7 @@ export class RenderQueue {
 	}
 
 	#walk(node: Node): void {
-		if (node.destroyed) return;
+		if (node.destroyed || !node.visible) return;
 
 		switch (node.space) {
 			case RenderSpace.World3D:
