@@ -11,12 +11,19 @@ import type {
 	Draw3D,
 	DrawUI,
 	FillOptions,
+	GradientOptions,
+	OutlineOptions,
+	RoundedOptions,
 	SpriteOptions,
 	StrokeOptions,
 	TextOptions,
 } from './context.ts';
 
 const DEFAULT_TEXT_SIZE = 20;
+const DEFAULT_ROUNDNESS = 0.25;
+
+/** Corner smoothness. Enough that a card edge does not look faceted. */
+const CORNER_SEGMENTS = 10;
 
 function fill(options?: FillOptions): Color {
 	return options?.color ?? WHITE;
@@ -78,11 +85,93 @@ export class Draw2DContext implements Draw2D {
 		rl.DrawRectangleRec(point.x, point.y, width * scale.x, height * scale.y, fill(options));
 	}
 
+	roundedRect(x: number, y: number, width: number, height: number, options?: RoundedOptions): void {
+		const point = this.#toWorld({ x, y });
+		const { scale } = this.#transform();
+
+		rl.DrawRectangleRounded(
+			point.x,
+			point.y,
+			width * scale.x,
+			height * scale.y,
+			options?.roundness ?? DEFAULT_ROUNDNESS,
+			CORNER_SEGMENTS,
+			fill(options),
+		);
+	}
+
+	roundedOutline(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		options?: OutlineOptions,
+	): void {
+		const point = this.#toWorld({ x, y });
+		const { scale } = this.#transform();
+
+		rl.DrawRectangleRoundedLinesEx(
+			point.x,
+			point.y,
+			width * scale.x,
+			height * scale.y,
+			options?.roundness ?? DEFAULT_ROUNDNESS,
+			CORNER_SEGMENTS,
+			options?.thickness ?? 1,
+			fill(options),
+		);
+	}
+
+	gradient(x: number, y: number, width: number, height: number, options: GradientOptions): void {
+		const point = this.#toWorld({ x, y });
+		const { scale } = this.#transform();
+		const w = width * scale.x;
+		const h = height * scale.y;
+
+		if (options.direction === 'horizontal') {
+			rl.DrawRectangleGradientH(point.x, point.y, w, h, options.from, options.to);
+			return;
+		}
+
+		rl.DrawRectangleGradientV(point.x, point.y, w, h, options.from, options.to);
+	}
+
 	circle(at: Vector2, radius: number, options?: FillOptions): void {
 		const point = this.#toWorld(at);
 		const { scale } = this.#transform();
 
 		rl.DrawCircleV(point.x, point.y, radius * Math.max(scale.x, scale.y), fill(options));
+	}
+
+	ring(at: Vector2, inner: number, outer: number, options?: FillOptions): void {
+		const point = this.#toWorld(at);
+		const { scale } = this.#transform();
+		const factor = Math.max(scale.x, scale.y);
+
+		rl.DrawRing(point.x, point.y, inner * factor, outer * factor, 0, 360, 48, fill(options));
+	}
+
+	triangle(a: Vector2, b: Vector2, c: Vector2, options?: FillOptions): void {
+		const p1 = this.#toWorld(a);
+		const p2 = this.#toWorld(b);
+		const p3 = this.#toWorld(c);
+
+		rl.DrawTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, fill(options));
+	}
+
+	polygon(at: Vector2, sides: number, radius: number, rotation = 0, options?: FillOptions): void {
+		const point = this.#toWorld(at);
+		const { scale, rotation: worldRotation } = this.#transform();
+		const degrees = rotation + (worldRotation * 180) / Math.PI;
+
+		rl.DrawPoly(
+			point.x,
+			point.y,
+			sides,
+			radius * Math.max(scale.x, scale.y),
+			degrees,
+			fill(options),
+		);
 	}
 
 	#transform() {
@@ -204,6 +293,37 @@ export class DrawUIContext implements DrawUI {
 
 	rect(x: number, y: number, width: number, height: number, options?: FillOptions): void {
 		rl.DrawRectangleRec(this.#rect.x + x, this.#rect.y + y, width, height, fill(options));
+	}
+
+	roundedRect(x: number, y: number, width: number, height: number, options?: RoundedOptions): void {
+		rl.DrawRectangleRounded(
+			this.#rect.x + x,
+			this.#rect.y + y,
+			width,
+			height,
+			options?.roundness ?? DEFAULT_ROUNDNESS,
+			CORNER_SEGMENTS,
+			fill(options),
+		);
+	}
+
+	roundedOutline(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		options?: OutlineOptions,
+	): void {
+		rl.DrawRectangleRoundedLinesEx(
+			this.#rect.x + x,
+			this.#rect.y + y,
+			width,
+			height,
+			options?.roundness ?? DEFAULT_ROUNDNESS,
+			CORNER_SEGMENTS,
+			options?.thickness ?? 1,
+			fill(options),
+		);
 	}
 
 	sprite(texture: Texture, x: number, y: number, options?: SpriteOptions): void {

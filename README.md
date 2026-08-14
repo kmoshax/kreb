@@ -12,38 +12,34 @@ cd my-game && bun install && bun run dev
 ## What a game looks like
 
 ```ts
-import { actions, Anchor, axis2, game, input, Key, Node2D, NodeUI, Scene } from 'kreb'
-import type { Draw2D, DrawUI } from 'kreb'
+import { actions, Anchor, axis2, game, input, Key, Label, MAROON, Node2D, Scene } from 'kreb'
+import type { Draw2D } from 'kreb'
 
 const Act = actions({
   move: axis2({ up: Key.KEY_W, down: Key.KEY_S, left: Key.KEY_A, right: Key.KEY_D }),
 })
 
 class Player extends Node2D {
+  constructor() {
+    super({ at: [480, 270] })
+  }
+
   update(dt: number) {
     const dir = input.axis(Act.move)
-    this.position.x += dir.x * 260 * dt
-    this.position.y += dir.y * 260 * dt
+
+    this.x += dir.x * 260 * dt
+    this.y += dir.y * 260 * dt
   }
 
   draw(g: Draw2D) {
-    g.circle({ x: 0, y: 0 }, 24, { color: 0xbe2137ff })
-  }
-}
-
-class Hud extends NodeUI {
-  draw(g: DrawUI) {
-    g.text('hello from kreb', 0, 0, { size: 20 })
+    g.circle({ x: 0, y: 0 }, 24, { color: MAROON })
   }
 }
 
 class Level extends Scene {
   ready() {
-    this.add(new Player('player')).position.set({ x: 480, y: 270 })
-
-    const hud = this.add(new Hud('hud'))
-    hud.anchor = Anchor.TopLeft
-    hud.offset = { x: 16, y: 16, width: 240, height: 24 }
+    this.add(new Player())
+    this.add(new Label('hello from kreb')).place({ anchor: Anchor.TopLeft, x: 16, y: 16 })
   }
 }
 
@@ -92,7 +88,9 @@ bun install
 bun test
 bun run typecheck
 bun run check          # biome lint + format
-bun packages/kreb/examples/demo.ts
+bun packages/kreb/examples/demo.ts        # 2D + 3D + UI
+bun packages/kreb/examples/pong.ts        # input, collision, tweens
+bun packages/kreb/examples/basra/main.ts  # basra, the Egyptian card game
 ```
 
 The native shim is compiled from `packages/raylib-sys/native/` by the system C compiler. Contributors need one; users do not.
@@ -111,6 +109,7 @@ bun run --filter @kreb/raylib-sys codegen
 - **The struct-ABI probes have only run on linux-x64** locally. CI runs them on all six targets; until that has run, aarch64 and Windows struct layouts are assumed rather than verified.
 - **Hot reload covers assets and behavior**, not full state preservation. Code-only authoring means there is no serialization format to rebuild a live scene from.
 - **UI is deliberately small** — panel, label, button, checkbox, slider, single-line text input. Enough for menus and HUDs, not a general toolkit.
+- **No text shaping.** raylib's default font is ASCII, so non-Latin text and glyphs like ♠♥♦♣ need a font loaded through the asset pipeline. The basra example draws its suits from primitives instead.
 
 Design documents live in `docs/superpowers/specs/`.
 

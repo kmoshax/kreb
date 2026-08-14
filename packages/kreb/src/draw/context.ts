@@ -22,6 +22,22 @@ export type FillOptions = {
 	color?: Color;
 };
 
+export type RoundedOptions = FillOptions & {
+	/** Corner radius as a fraction of the shorter side, 0 to 1. */
+	roundness?: number;
+};
+
+export type OutlineOptions = RoundedOptions & {
+	thickness?: number;
+};
+
+export type GradientOptions = {
+	from: Color;
+	to: Color;
+	/** Horizontal gradients run left to right; vertical run top to bottom. */
+	direction?: 'vertical' | 'horizontal';
+};
+
 /**
  * Coordinates are local to the node being drawn; the context applies that
  * node's world transform. Contexts are handed in by the render pass and cannot
@@ -33,7 +49,26 @@ export interface Draw2D {
 	text(value: string, at: Vector2, options?: TextOptions): void;
 	line(from: Vector2, to: Vector2, options?: StrokeOptions): void;
 	rect(x: number, y: number, width: number, height: number, options?: FillOptions): void;
+	roundedRect(x: number, y: number, width: number, height: number, options?: RoundedOptions): void;
+	roundedOutline(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		options?: OutlineOptions,
+	): void;
+	gradient(x: number, y: number, width: number, height: number, options: GradientOptions): void;
 	circle(at: Vector2, radius: number, options?: FillOptions): void;
+	ring(at: Vector2, inner: number, outer: number, options?: FillOptions): void;
+	/** Vertices must be given counter-clockwise or raylib culls the face. */
+	triangle(a: Vector2, b: Vector2, c: Vector2, options?: FillOptions): void;
+	polygon(
+		at: Vector2,
+		sides: number,
+		radius: number,
+		rotation?: number,
+		options?: FillOptions,
+	): void;
 }
 
 export interface Draw3D {
@@ -53,5 +88,13 @@ export interface DrawUI {
 	/** Width the given text would occupy, for centring and caret placement. */
 	measure(value: string, size?: number): number;
 	rect(x: number, y: number, width: number, height: number, options?: FillOptions): void;
+	roundedRect(x: number, y: number, width: number, height: number, options?: RoundedOptions): void;
+	roundedOutline(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		options?: OutlineOptions,
+	): void;
 	sprite(texture: Texture, x: number, y: number, options?: SpriteOptions): void;
 }

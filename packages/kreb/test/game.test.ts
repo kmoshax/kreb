@@ -130,6 +130,50 @@ test('many frames run without error', () => {
 	expect(game.scenes.depth).toBe(1);
 });
 
+test('every 2D and UI primitive draws without error', () => {
+	const drawn: string[] = [];
+
+	class Shapes extends k.Node2D {
+		override draw(g: Draw2D): void {
+			g.rect(0, 0, 10, 10);
+			g.roundedRect(0, 0, 10, 10, { roundness: 0.3 });
+			g.roundedOutline(0, 0, 10, 10, { thickness: 2 });
+			g.gradient(0, 0, 10, 10, { from: colors.RED, to: colors.BLUE });
+			g.gradient(0, 0, 10, 10, { from: colors.RED, to: colors.BLUE, direction: 'horizontal' });
+			g.circle({ x: 0, y: 0 }, 5);
+			g.ring({ x: 0, y: 0 }, 3, 5);
+			g.triangle({ x: 0, y: 0 }, { x: 5, y: 10 }, { x: 10, y: 0 });
+			g.polygon({ x: 0, y: 0 }, 4, 6, 45);
+			g.line({ x: 0, y: 0 }, { x: 10, y: 10 });
+			drawn.push('2d');
+		}
+	}
+
+	class Chrome extends k.NodeUI {
+		override draw(g: DrawUI): void {
+			g.rect(0, 0, 20, 10);
+			g.roundedRect(0, 0, 20, 10, { roundness: 0.4 });
+			g.roundedOutline(0, 0, 20, 10, { thickness: 2 });
+			g.text('x', 0, 0);
+			drawn.push('ui');
+		}
+	}
+
+	class Gallery extends k.Scene {
+		override ready(): void {
+			this.add(new Shapes('shapes'));
+			this.add(new Chrome('chrome')).place({ x: 0, y: 0, width: 20, height: 10 });
+		}
+	}
+
+	game.scenes.push(new Gallery('gallery'));
+	game.render();
+
+	expect(drawn).toEqual(['2d', 'ui']);
+
+	game.scenes.pop();
+});
+
 test('collision runs inside the fixed step and fires callbacks', () => {
 	const touched: string[] = [];
 

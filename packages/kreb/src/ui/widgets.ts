@@ -15,10 +15,11 @@ export class Panel extends Widget {
 
 	override draw(g: DrawUI): void {
 		const { width, height } = g;
-		const { borderWidth: border } = this.theme;
+		const { roundness } = this.theme;
 
-		g.rect(0, 0, width, height, { color: this.theme.panelBorder });
-		g.rect(border, border, width - border * 2, height - border * 2, { color: this.theme.panel });
+		g.roundedRect(4, 6, width, height, { roundness, color: this.theme.shadow });
+		g.roundedRect(0, 0, width, height, { roundness, color: this.theme.panel });
+		g.roundedOutline(0, 0, width, height, { roundness, color: this.theme.panelBorder });
 	}
 }
 
@@ -87,11 +88,17 @@ export class Button extends Widget {
 					? this.theme.controlHover
 					: this.theme.control;
 
-		g.rect(0, 0, width, height, { color: background });
+		const roundness = this.theme.roundness;
+		const sink = this.state.pressed ? 1 : 0;
+
+		if (!this.disabled) g.roundedRect(0, 3, width, height, { roundness, color: this.theme.shadow });
+
+		g.roundedRect(0, sink, width, height, { roundness, color: background });
 
 		if (this.state.focused) {
-			g.rect(0, 0, width, this.theme.borderWidth, { color: this.theme.focusRing });
-			g.rect(0, height - this.theme.borderWidth, width, this.theme.borderWidth, {
+			g.roundedOutline(0, sink, width, height, {
+				roundness,
+				thickness: 2,
 				color: this.theme.focusRing,
 			});
 		}
@@ -99,7 +106,7 @@ export class Button extends Widget {
 		const size = this.theme.fontSize;
 		const textWidth = g.measure(this.text, size);
 
-		g.text(this.text, (width - textWidth) / 2, (height - size) / 2, {
+		g.text(this.text, (width - textWidth) / 2, (height - size) / 2 + sink, {
 			size,
 			color: this.disabled ? this.theme.textMuted : this.theme.text,
 		});
@@ -141,13 +148,23 @@ export class Checkbox extends Widget {
 		const top = (height - CHECKBOX_SIZE) / 2;
 		const border = this.state.focused ? this.theme.focusRing : this.theme.panelBorder;
 
-		g.rect(0, top, CHECKBOX_SIZE, CHECKBOX_SIZE, { color: border });
-		g.rect(1, top + 1, CHECKBOX_SIZE - 2, CHECKBOX_SIZE - 2, {
-			color: this.state.hovered ? this.theme.controlHover : this.theme.control,
+		const box = { roundness: 0.3 };
+
+		g.roundedRect(0, top, CHECKBOX_SIZE, CHECKBOX_SIZE, {
+			...box,
+			color: this.checked
+				? this.theme.accent
+				: this.state.hovered
+					? this.theme.controlHover
+					: this.theme.control,
 		});
+		g.roundedOutline(0, top, CHECKBOX_SIZE, CHECKBOX_SIZE, { ...box, color: border });
 
 		if (this.checked) {
-			g.rect(4, top + 4, CHECKBOX_SIZE - 8, CHECKBOX_SIZE - 8, { color: this.theme.accent });
+			// A tick built from two strokes reads better than a filled square.
+			g.rect(5, top + 10, 4, 4, { color: this.theme.panel });
+			g.rect(8, top + 12, 3, 3, { color: this.theme.panel });
+			g.rect(10, top + 6, 5, 7, { color: this.theme.panel });
 		}
 
 		g.text(this.text, CHECKBOX_SIZE + this.theme.padding, (height - this.theme.fontSize) / 2, {
@@ -213,16 +230,26 @@ export class Slider extends Widget {
 		const { width, height } = g;
 		const trackTop = (height - SLIDER_TRACK_HEIGHT) / 2;
 
-		g.rect(0, trackTop, width, SLIDER_TRACK_HEIGHT, { color: this.theme.control });
-		g.rect(0, trackTop, width * this.fraction, SLIDER_TRACK_HEIGHT, { color: this.theme.accent });
+		const track = { roundness: 1 };
+
+		g.roundedRect(0, trackTop, width, SLIDER_TRACK_HEIGHT, { ...track, color: this.theme.control });
+		g.roundedRect(0, trackTop, width * this.fraction, SLIDER_TRACK_HEIGHT, {
+			...track,
+			color: this.theme.accent,
+		});
 
 		const knobX = (width - SLIDER_KNOB_WIDTH) * this.fraction;
-		g.rect(knobX, 0, SLIDER_KNOB_WIDTH, height, {
-			color: this.state.focused
-				? this.theme.focusRing
-				: this.state.hovered
-					? this.theme.controlHover
-					: this.theme.controlActive,
+
+		if (this.state.hovered || this.state.focused) {
+			g.roundedRect(knobX - 4, -2, SLIDER_KNOB_WIDTH + 8, height + 4, {
+				roundness: 1,
+				color: this.theme.accentMuted,
+			});
+		}
+
+		g.roundedRect(knobX, 0, SLIDER_KNOB_WIDTH, height, {
+			roundness: 1,
+			color: this.state.focused ? this.theme.focusRing : this.theme.text,
 		});
 	}
 }
@@ -271,10 +298,15 @@ export class TextInput extends Widget {
 	override draw(g: DrawUI): void {
 		const { width, height } = g;
 		const border = this.state.focused ? this.theme.focusRing : this.theme.panelBorder;
-		const inset = this.theme.borderWidth;
 
-		g.rect(0, 0, width, height, { color: border });
-		g.rect(inset, inset, width - inset * 2, height - inset * 2, { color: this.theme.control });
+		const roundness = this.theme.roundness;
+
+		g.roundedRect(0, 0, width, height, { roundness, color: this.theme.control });
+		g.roundedOutline(0, 0, width, height, {
+			roundness,
+			thickness: this.state.focused ? 2 : 1,
+			color: border,
+		});
 
 		const size = this.theme.fontSize;
 		const top = (height - size) / 2;

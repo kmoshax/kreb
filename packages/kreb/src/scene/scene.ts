@@ -10,8 +10,28 @@ import { UiSystem } from '../ui/system.ts';
 export const assetCache = new AssetCache();
 
 export class Scene extends Node {
+	#manager: SceneManager | null = null;
+
 	protected override get isSceneRoot(): boolean {
 		return true;
+	}
+
+	/**
+	 * The stack this scene sits on, so a menu can push the next screen without
+	 * being handed a reference. Throws when the scene is not on a stack, which
+	 * only happens before it has been pushed.
+	 */
+	get scenes(): SceneManager {
+		if (!this.#manager) {
+			throw new Error(`Scene "${this.name}" is not on a scene stack yet`);
+		}
+
+		return this.#manager;
+	}
+
+	/** @internal */
+	attach(manager: SceneManager): void {
+		this.#manager = manager;
 	}
 
 	camera2d: Camera2D | null = null;
@@ -57,6 +77,7 @@ export class SceneManager {
 
 	/** Overlays a scene, leaving the one below alive but no longer updated. */
 	push(scene: Scene): void {
+		scene.attach(this);
 		this.#stack.push(scene);
 		scene.enterTree();
 	}
