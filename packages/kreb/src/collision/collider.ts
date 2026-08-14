@@ -1,7 +1,8 @@
 import type { Vector2, Vector3 } from '@kreb/math';
 import { components } from '@kreb/math';
-import { Node2D } from '../core/node-2d.ts';
-import { Node3D } from '../core/node-3d.ts';
+import { Node2D, type Node2DOptions } from '../core/node-2d.ts';
+import { Node3D, type Node3DOptions } from '../core/node-3d.ts';
+import type { Draw2D, Draw3D } from '../draw/context.ts';
 import { ALL_LAYERS, DEFAULT_LAYER } from './layers.ts';
 import { type Bounds, boundsOf, type Volume } from './volume.ts';
 
@@ -10,7 +11,19 @@ export type ColliderOptions = {
 	mask?: number;
 	/** Reports overlaps without being treated as solid by future dynamics. */
 	sensor?: boolean;
+	/** When set, the collider draws its own shape. Unset means invisible. */
+	color?: number;
 };
+
+export type BoxCollider2DOptions = ColliderOptions &
+	Node2DOptions & { size: readonly [number, number] };
+
+export type CircleCollider2DOptions = ColliderOptions & Node2DOptions & { radius: number };
+
+export type BoxCollider3DOptions = ColliderOptions &
+	Node3DOptions & { size: readonly [number, number, number] };
+
+export type SphereCollider3DOptions = ColliderOptions & Node3DOptions & { radius: number };
 
 let nextId = 1;
 
@@ -22,6 +35,7 @@ export interface Collider {
 	sensor: boolean;
 	readonly volume: Volume;
 	readonly bounds: Bounds;
+	color: number | null;
 	onEnter(other: Collider): void;
 	onExit(other: Collider): void;
 }
@@ -30,6 +44,7 @@ function applyOptions(target: Collider, options: ColliderOptions): void {
 	target.layer = options.layer ?? DEFAULT_LAYER;
 	target.mask = options.mask ?? ALL_LAYERS;
 	target.sensor = options.sensor ?? true;
+	target.color = options.color ?? null;
 }
 
 export abstract class Collider2D extends Node2D implements Collider {
@@ -38,6 +53,7 @@ export abstract class Collider2D extends Node2D implements Collider {
 	layer = DEFAULT_LAYER;
 	mask = ALL_LAYERS;
 	sensor = true;
+	color: number | null = null;
 
 	abstract get volume(): Volume;
 
@@ -53,11 +69,17 @@ export abstract class Collider2D extends Node2D implements Collider {
 export class BoxCollider2D extends Collider2D {
 	size: Vector2;
 
-	constructor(size: Vector2, options: ColliderOptions = {}, name?: string) {
-		super(name);
+	constructor(options: BoxCollider2DOptions) {
+		super(options);
 
-		this.size = size;
+		this.size = { x: options.size[0], y: options.size[1] };
 		applyOptions(this, options);
+	}
+
+	override draw(g: Draw2D): void {
+		if (this.color === null) return;
+
+		g.rect(-this.size.x / 2, -this.size.y / 2, this.size.x, this.size.y, { color: this.color });
 	}
 
 	get volume(): Volume {
@@ -74,11 +96,17 @@ export class BoxCollider2D extends Collider2D {
 export class CircleCollider2D extends Collider2D {
 	radius: number;
 
-	constructor(radius: number, options: ColliderOptions = {}, name?: string) {
-		super(name);
+	constructor(options: CircleCollider2DOptions) {
+		super(options);
 
-		this.radius = radius;
+		this.radius = options.radius;
 		applyOptions(this, options);
+	}
+
+	override draw(g: Draw2D): void {
+		if (this.color === null) return;
+
+		g.circle({ x: 0, y: 0 }, this.radius, { color: this.color });
 	}
 
 	get volume(): Volume {
@@ -98,6 +126,7 @@ export abstract class Collider3D extends Node3D implements Collider {
 	layer = DEFAULT_LAYER;
 	mask = ALL_LAYERS;
 	sensor = true;
+	color: number | null = null;
 
 	abstract get volume(): Volume;
 
@@ -124,11 +153,17 @@ export abstract class Collider3D extends Node3D implements Collider {
 export class BoxCollider3D extends Collider3D {
 	size: Vector3;
 
-	constructor(size: Vector3, options: ColliderOptions = {}, name?: string) {
-		super(name);
+	constructor(options: BoxCollider3DOptions) {
+		super(options);
 
-		this.size = size;
+		this.size = { x: options.size[0], y: options.size[1], z: options.size[2] };
 		applyOptions(this, options);
+	}
+
+	override draw(g: Draw3D): void {
+		if (this.color === null) return;
+
+		g.cube(this.size, { color: this.color });
 	}
 
 	get volume(): Volume {
@@ -146,11 +181,17 @@ export class BoxCollider3D extends Collider3D {
 export class SphereCollider3D extends Collider3D {
 	radius: number;
 
-	constructor(radius: number, options: ColliderOptions = {}, name?: string) {
-		super(name);
+	constructor(options: SphereCollider3DOptions) {
+		super(options);
 
-		this.radius = radius;
+		this.radius = options.radius;
 		applyOptions(this, options);
+	}
+
+	override draw(g: Draw3D): void {
+		if (this.color === null) return;
+
+		g.sphere(this.radius, { color: this.color });
 	}
 
 	get volume(): Volume {

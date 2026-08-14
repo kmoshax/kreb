@@ -141,7 +141,7 @@ export class Draw3DContext implements Draw3D {
 
 		// The node's composed matrix goes straight into the model, which is the
 		// only route that survives arbitrary nesting.
-		rl.symbols.kreb_set_Model_transform(model.pointer, ptr(this.#transform));
+		rl.symbols().kreb_set_Model_transform(model.pointer, ptr(this.#transform));
 		rl.DrawModel(model.pointer, 0, 0, 0, 1, options?.tint ?? WHITE);
 	}
 
@@ -178,6 +178,14 @@ export class DrawUIContext implements DrawUI {
 	/** @internal */
 	bind(rect: Rect): void {
 		this.#rect = rect;
+	}
+
+	get width(): number {
+		return this.#rect.width;
+	}
+
+	get height(): number {
+		return this.#rect.height;
 	}
 
 	text(value: string, x: number, y: number, options?: TextOptions): void {

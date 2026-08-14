@@ -90,19 +90,19 @@ export class Image extends Resource {
 	}
 
 	get width(): number {
-		return rl.symbols.kreb_get_Image_width(this.pointer);
+		return rl.symbols().kreb_get_Image_width(this.pointer);
 	}
 
 	get height(): number {
-		return rl.symbols.kreb_get_Image_height(this.pointer);
+		return rl.symbols().kreb_get_Image_height(this.pointer);
 	}
 
 	get format(): number {
-		return rl.symbols.kreb_get_Image_format(this.pointer);
+		return rl.symbols().kreb_get_Image_format(this.pointer);
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Image_width(pointer) > 0;
+		return rl.symbols().kreb_get_Image_width(pointer) > 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -120,21 +120,21 @@ export class Texture extends Resource {
 	}
 
 	get id(): number {
-		return rl.symbols.kreb_get_Texture_id(this.pointer);
+		return rl.symbols().kreb_get_Texture_id(this.pointer);
 	}
 
 	get width(): number {
-		return rl.symbols.kreb_get_Texture_width(this.pointer);
+		return rl.symbols().kreb_get_Texture_width(this.pointer);
 	}
 
 	get height(): number {
-		return rl.symbols.kreb_get_Texture_height(this.pointer);
+		return rl.symbols().kreb_get_Texture_height(this.pointer);
 	}
 
 	// raylib signals a failed GPU upload with id 0 rather than an error, and a
 	// zero-id texture silently draws nothing.
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Texture_id(pointer) !== 0;
+		return rl.symbols().kreb_get_Texture_id(pointer) !== 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -151,18 +151,18 @@ export class RenderTexture extends Resource {
 	}
 
 	get id(): number {
-		return rl.symbols.kreb_get_RenderTexture_id(this.pointer);
+		return rl.symbols().kreb_get_RenderTexture_id(this.pointer);
 	}
 
 	get texture(): Pointer {
-		const texture = rl.symbols.kreb_ref_RenderTexture_texture(this.pointer);
+		const texture = rl.symbols().kreb_ref_RenderTexture_texture(this.pointer);
 		if (texture === null) throw new Error(`${this.label} has no texture`);
 
 		return texture;
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_RenderTexture_id(pointer) !== 0;
+		return rl.symbols().kreb_get_RenderTexture_id(pointer) !== 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -176,15 +176,15 @@ export class Font extends Resource {
 	}
 
 	get baseSize(): number {
-		return rl.symbols.kreb_get_Font_baseSize(this.pointer);
+		return rl.symbols().kreb_get_Font_baseSize(this.pointer);
 	}
 
 	get glyphCount(): number {
-		return rl.symbols.kreb_get_Font_glyphCount(this.pointer);
+		return rl.symbols().kreb_get_Font_glyphCount(this.pointer);
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Font_glyphCount(pointer) > 0;
+		return rl.symbols().kreb_get_Font_glyphCount(pointer) > 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -198,11 +198,11 @@ export class Shader extends Resource {
 	}
 
 	get id(): number {
-		return rl.symbols.kreb_get_Shader_id(this.pointer);
+		return rl.symbols().kreb_get_Shader_id(this.pointer);
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Shader_id(pointer) !== 0;
+		return rl.symbols().kreb_get_Shader_id(pointer) !== 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -216,19 +216,19 @@ export class Wave extends Resource {
 	}
 
 	get frameCount(): number {
-		return rl.symbols.kreb_get_Wave_frameCount(this.pointer);
+		return rl.symbols().kreb_get_Wave_frameCount(this.pointer);
 	}
 
 	get sampleRate(): number {
-		return rl.symbols.kreb_get_Wave_sampleRate(this.pointer);
+		return rl.symbols().kreb_get_Wave_sampleRate(this.pointer);
 	}
 
 	get channels(): number {
-		return rl.symbols.kreb_get_Wave_channels(this.pointer);
+		return rl.symbols().kreb_get_Wave_channels(this.pointer);
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Wave_frameCount(pointer) > 0;
+		return rl.symbols().kreb_get_Wave_frameCount(pointer) > 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -246,7 +246,7 @@ export class Sound extends Resource {
 	}
 
 	get frameCount(): number {
-		return rl.symbols.kreb_get_Sound_frameCount(this.pointer);
+		return rl.symbols().kreb_get_Sound_frameCount(this.pointer);
 	}
 
 	play(): void {
@@ -262,7 +262,7 @@ export class Sound extends Resource {
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Sound_frameCount(pointer) > 0;
+		return rl.symbols().kreb_get_Sound_frameCount(pointer) > 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -276,11 +276,11 @@ export class Music extends Resource {
 	}
 
 	get frameCount(): number {
-		return rl.symbols.kreb_get_Music_frameCount(this.pointer);
+		return rl.symbols().kreb_get_Music_frameCount(this.pointer);
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Music_frameCount(pointer) > 0;
+		return rl.symbols().kreb_get_Music_frameCount(pointer) > 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -298,15 +298,15 @@ export class Mesh extends Resource {
 	}
 
 	get vertexCount(): number {
-		return rl.symbols.kreb_get_Mesh_vertexCount(this.pointer);
+		return rl.symbols().kreb_get_Mesh_vertexCount(this.pointer);
 	}
 
 	get triangleCount(): number {
-		return rl.symbols.kreb_get_Mesh_triangleCount(this.pointer);
+		return rl.symbols().kreb_get_Mesh_triangleCount(this.pointer);
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Mesh_vertexCount(pointer) > 0;
+		return rl.symbols().kreb_get_Mesh_vertexCount(pointer) > 0;
 	}
 
 	protected unload(pointer: Pointer): void {
@@ -329,15 +329,15 @@ export class Model extends Resource {
 	}
 
 	get meshCount(): number {
-		return rl.symbols.kreb_get_Model_meshCount(this.pointer);
+		return rl.symbols().kreb_get_Model_meshCount(this.pointer);
 	}
 
 	get materialCount(): number {
-		return rl.symbols.kreb_get_Model_materialCount(this.pointer);
+		return rl.symbols().kreb_get_Model_materialCount(this.pointer);
 	}
 
 	protected override isValid(pointer: Pointer): boolean {
-		return rl.symbols.kreb_get_Model_meshCount(pointer) > 0;
+		return rl.symbols().kreb_get_Model_meshCount(pointer) > 0;
 	}
 
 	protected unload(pointer: Pointer): void {

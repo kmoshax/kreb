@@ -24,7 +24,7 @@ export class Camera2D extends Node2D {
 	constructor(name?: string) {
 		super(name);
 
-		const handle = rl.symbols.kreb_alloc_Camera2D();
+		const handle = rl.symbols().kreb_alloc_Camera2D();
 		if (handle === null) throw new Error('Failed to allocate Camera2D');
 
 		this.#handle = handle;
@@ -46,7 +46,7 @@ export class Camera2D extends Node2D {
 		this.#fields[4] = (rotation * 180) / Math.PI;
 		this.#fields[5] = this.zoom;
 
-		rl.symbols.kreb_write_Camera2D(this.#handle, ptr(this.#fields));
+		rl.symbols().kreb_write_Camera2D(this.#handle, ptr(this.#fields));
 
 		return this.#handle;
 	}
@@ -71,7 +71,7 @@ export class Camera3D extends Node3D {
 	constructor(name?: string) {
 		super(name);
 
-		const handle = rl.symbols.kreb_alloc_Camera3D();
+		const handle = rl.symbols().kreb_alloc_Camera3D();
 		if (handle === null) throw new Error('Failed to allocate Camera3D');
 
 		this.#handle = handle;
@@ -97,7 +97,7 @@ export class Camera3D extends Node3D {
 		this.#fields[9] = this.fovY;
 		this.#fields[10] = this.projection;
 
-		rl.symbols.kreb_write_Camera3D(this.#handle, ptr(this.#fields));
+		rl.symbols().kreb_write_Camera3D(this.#handle, ptr(this.#fields));
 
 		return this.#handle;
 	}

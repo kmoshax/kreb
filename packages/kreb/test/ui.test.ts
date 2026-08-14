@@ -367,3 +367,26 @@ test('nested widgets resolve against their parent rect', () => {
 	click(ui, root, 130, 130);
 	expect(presses).toBe(1);
 });
+
+test('a widget with no declared size falls back to its content', () => {
+	const label = new Label('measured');
+	label.place({ x: 10, y: 10 });
+
+	const rect = label.resolve(VIEWPORT);
+
+	expect(rect.width).toBeGreaterThan(0);
+	expect(rect.height).toBe(label.theme.fontSize);
+});
+
+test('a declared size always wins over the content size', () => {
+	const label = new Label('measured');
+	label.place({ x: 0, y: 0, width: 500, height: 40 });
+
+	expect(label.resolve(VIEWPORT)).toMatchObject({ width: 500, height: 40 });
+});
+
+test('a node outside a scene says so instead of returning null', () => {
+	const orphan = new Panel('orphan');
+
+	expect(() => orphan.scene).toThrow('is not inside a Scene');
+});

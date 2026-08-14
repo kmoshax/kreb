@@ -290,3 +290,32 @@ test('alpha reports progress toward the next step', () => {
 	loop.advance(1 / 120);
 	expect(loop.alpha).toBeCloseTo(0.5, 5);
 });
+
+test('a node finds the scene it belongs to, however deep', () => {
+	class Root extends Node {
+		protected override get isSceneRoot(): boolean {
+			return true;
+		}
+	}
+
+	const root = new Root('level');
+	const child = root.add(new Node2D('child'));
+	const grandchild = child.add(new Node2D('grandchild'));
+
+	expect(grandchild.scene).toBe(root as unknown as typeof grandchild.scene);
+});
+
+test('position shorthand and chainable placement', () => {
+	const node = new Node2D({ at: [10, 20], rotation: 0.5, zIndex: 3 });
+
+	expect(node.x).toBe(10);
+	expect(node.y).toBe(20);
+	expect(node.rotation).toBe(0.5);
+	expect(node.zIndex).toBe(3);
+
+	node.x = 99;
+	expect(node.global.position.x).toBe(99);
+
+	expect(node.at(1, 2)).toBe(node);
+	expect(node.y).toBe(2);
+});

@@ -1000,7 +1000,16 @@ const shimSymbols = {
 	kreb_DetachAudioMixedProcessor: { args: ['ptr'], returns: 'void' },
 } satisfies Record<string, FFIFunction>;
 
-export const symbols = loadShim(SHIM_NAME, shimSymbols);
+type Symbols = ReturnType<typeof loadShim<typeof shimSymbols>>;
+
+let cached: Symbols | null = null;
+
+// Loaded on first call rather than at import, so importing kreb never
+// requires a built shim and callers need no dynamic import dance.
+export function symbols(): Symbols {
+	cached ??= loadShim(SHIM_NAME, shimSymbols);
+	return cached;
+}
 
 const scratch = new Float32Array(16);
 const scratchPtr = ptr(scratch);
@@ -1015,248 +1024,248 @@ function readCString(pointer: Pointer | null): string {
 }
 
 export function free(handle: Pointer): void {
-	symbols.kreb_free(handle);
+	symbols().kreb_free(handle);
 }
 
 export function InitWindow(width: number, height: number, title: string): void {
-	symbols.kreb_InitWindow(width, height, cstring(title));
+	symbols().kreb_InitWindow(width, height, cstring(title));
 }
 export function CloseWindow(): void {
-	symbols.kreb_CloseWindow();
+	symbols().kreb_CloseWindow();
 }
 export function WindowShouldClose(): boolean {
-	return symbols.kreb_WindowShouldClose() === 1;
+	return symbols().kreb_WindowShouldClose() === 1;
 }
 export function IsWindowReady(): boolean {
-	return symbols.kreb_IsWindowReady() === 1;
+	return symbols().kreb_IsWindowReady() === 1;
 }
 export function IsWindowFullscreen(): boolean {
-	return symbols.kreb_IsWindowFullscreen() === 1;
+	return symbols().kreb_IsWindowFullscreen() === 1;
 }
 export function IsWindowHidden(): boolean {
-	return symbols.kreb_IsWindowHidden() === 1;
+	return symbols().kreb_IsWindowHidden() === 1;
 }
 export function IsWindowMinimized(): boolean {
-	return symbols.kreb_IsWindowMinimized() === 1;
+	return symbols().kreb_IsWindowMinimized() === 1;
 }
 export function IsWindowMaximized(): boolean {
-	return symbols.kreb_IsWindowMaximized() === 1;
+	return symbols().kreb_IsWindowMaximized() === 1;
 }
 export function IsWindowFocused(): boolean {
-	return symbols.kreb_IsWindowFocused() === 1;
+	return symbols().kreb_IsWindowFocused() === 1;
 }
 export function IsWindowResized(): boolean {
-	return symbols.kreb_IsWindowResized() === 1;
+	return symbols().kreb_IsWindowResized() === 1;
 }
 export function IsWindowState(flag: number): boolean {
-	return symbols.kreb_IsWindowState(flag) === 1;
+	return symbols().kreb_IsWindowState(flag) === 1;
 }
 export function SetWindowState(flags: number): void {
-	symbols.kreb_SetWindowState(flags);
+	symbols().kreb_SetWindowState(flags);
 }
 export function ClearWindowState(flags: number): void {
-	symbols.kreb_ClearWindowState(flags);
+	symbols().kreb_ClearWindowState(flags);
 }
 export function ToggleFullscreen(): void {
-	symbols.kreb_ToggleFullscreen();
+	symbols().kreb_ToggleFullscreen();
 }
 export function ToggleBorderlessWindowed(): void {
-	symbols.kreb_ToggleBorderlessWindowed();
+	symbols().kreb_ToggleBorderlessWindowed();
 }
 export function MaximizeWindow(): void {
-	symbols.kreb_MaximizeWindow();
+	symbols().kreb_MaximizeWindow();
 }
 export function MinimizeWindow(): void {
-	symbols.kreb_MinimizeWindow();
+	symbols().kreb_MinimizeWindow();
 }
 export function RestoreWindow(): void {
-	symbols.kreb_RestoreWindow();
+	symbols().kreb_RestoreWindow();
 }
 export function SetWindowIcon(image: Pointer): void {
-	symbols.kreb_SetWindowIcon(image);
+	symbols().kreb_SetWindowIcon(image);
 }
 export function SetWindowIcons(images: Pointer, count: number): void {
-	symbols.kreb_SetWindowIcons(images, count);
+	symbols().kreb_SetWindowIcons(images, count);
 }
 export function SetWindowTitle(title: string): void {
-	symbols.kreb_SetWindowTitle(cstring(title));
+	symbols().kreb_SetWindowTitle(cstring(title));
 }
 export function SetWindowPosition(x: number, y: number): void {
-	symbols.kreb_SetWindowPosition(x, y);
+	symbols().kreb_SetWindowPosition(x, y);
 }
 export function SetWindowMonitor(monitor: number): void {
-	symbols.kreb_SetWindowMonitor(monitor);
+	symbols().kreb_SetWindowMonitor(monitor);
 }
 export function SetWindowMinSize(width: number, height: number): void {
-	symbols.kreb_SetWindowMinSize(width, height);
+	symbols().kreb_SetWindowMinSize(width, height);
 }
 export function SetWindowMaxSize(width: number, height: number): void {
-	symbols.kreb_SetWindowMaxSize(width, height);
+	symbols().kreb_SetWindowMaxSize(width, height);
 }
 export function SetWindowSize(width: number, height: number): void {
-	symbols.kreb_SetWindowSize(width, height);
+	symbols().kreb_SetWindowSize(width, height);
 }
 export function SetWindowOpacity(opacity: number): void {
-	symbols.kreb_SetWindowOpacity(opacity);
+	symbols().kreb_SetWindowOpacity(opacity);
 }
 export function SetWindowFocused(): void {
-	symbols.kreb_SetWindowFocused();
+	symbols().kreb_SetWindowFocused();
 }
 export function GetWindowHandle(): Pointer | null {
-	return symbols.kreb_GetWindowHandle();
+	return symbols().kreb_GetWindowHandle();
 }
 export function GetScreenWidth(): number {
-	return symbols.kreb_GetScreenWidth();
+	return symbols().kreb_GetScreenWidth();
 }
 export function GetScreenHeight(): number {
-	return symbols.kreb_GetScreenHeight();
+	return symbols().kreb_GetScreenHeight();
 }
 export function GetRenderWidth(): number {
-	return symbols.kreb_GetRenderWidth();
+	return symbols().kreb_GetRenderWidth();
 }
 export function GetRenderHeight(): number {
-	return symbols.kreb_GetRenderHeight();
+	return symbols().kreb_GetRenderHeight();
 }
 export function GetMonitorCount(): number {
-	return symbols.kreb_GetMonitorCount();
+	return symbols().kreb_GetMonitorCount();
 }
 export function GetCurrentMonitor(): number {
-	return symbols.kreb_GetCurrentMonitor();
+	return symbols().kreb_GetCurrentMonitor();
 }
 export function GetMonitorPosition(monitor: number): Float32Array {
-	symbols.kreb_GetMonitorPosition(monitor, scratchPtr);
+	symbols().kreb_GetMonitorPosition(monitor, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetMonitorWidth(monitor: number): number {
-	return symbols.kreb_GetMonitorWidth(monitor);
+	return symbols().kreb_GetMonitorWidth(monitor);
 }
 export function GetMonitorHeight(monitor: number): number {
-	return symbols.kreb_GetMonitorHeight(monitor);
+	return symbols().kreb_GetMonitorHeight(monitor);
 }
 export function GetMonitorPhysicalWidth(monitor: number): number {
-	return symbols.kreb_GetMonitorPhysicalWidth(monitor);
+	return symbols().kreb_GetMonitorPhysicalWidth(monitor);
 }
 export function GetMonitorPhysicalHeight(monitor: number): number {
-	return symbols.kreb_GetMonitorPhysicalHeight(monitor);
+	return symbols().kreb_GetMonitorPhysicalHeight(monitor);
 }
 export function GetMonitorRefreshRate(monitor: number): number {
-	return symbols.kreb_GetMonitorRefreshRate(monitor);
+	return symbols().kreb_GetMonitorRefreshRate(monitor);
 }
 export function GetWindowPosition(): Float32Array {
-	symbols.kreb_GetWindowPosition(scratchPtr);
+	symbols().kreb_GetWindowPosition(scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetWindowScaleDPI(): Float32Array {
-	symbols.kreb_GetWindowScaleDPI(scratchPtr);
+	symbols().kreb_GetWindowScaleDPI(scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetMonitorName(monitor: number): string {
-	return readCString(symbols.kreb_GetMonitorName(monitor));
+	return readCString(symbols().kreb_GetMonitorName(monitor));
 }
 export function SetClipboardText(text: string): void {
-	symbols.kreb_SetClipboardText(cstring(text));
+	symbols().kreb_SetClipboardText(cstring(text));
 }
 export function GetClipboardText(): string {
-	return readCString(symbols.kreb_GetClipboardText());
+	return readCString(symbols().kreb_GetClipboardText());
 }
 export function GetClipboardImage(): Pointer | null {
-	return symbols.kreb_GetClipboardImage();
+	return symbols().kreb_GetClipboardImage();
 }
 export function EnableEventWaiting(): void {
-	symbols.kreb_EnableEventWaiting();
+	symbols().kreb_EnableEventWaiting();
 }
 export function DisableEventWaiting(): void {
-	symbols.kreb_DisableEventWaiting();
+	symbols().kreb_DisableEventWaiting();
 }
 export function ShowCursor(): void {
-	symbols.kreb_ShowCursor();
+	symbols().kreb_ShowCursor();
 }
 export function HideCursor(): void {
-	symbols.kreb_HideCursor();
+	symbols().kreb_HideCursor();
 }
 export function IsCursorHidden(): boolean {
-	return symbols.kreb_IsCursorHidden() === 1;
+	return symbols().kreb_IsCursorHidden() === 1;
 }
 export function EnableCursor(): void {
-	symbols.kreb_EnableCursor();
+	symbols().kreb_EnableCursor();
 }
 export function DisableCursor(): void {
-	symbols.kreb_DisableCursor();
+	symbols().kreb_DisableCursor();
 }
 export function IsCursorOnScreen(): boolean {
-	return symbols.kreb_IsCursorOnScreen() === 1;
+	return symbols().kreb_IsCursorOnScreen() === 1;
 }
 export function ClearBackground(color: number): void {
-	symbols.kreb_ClearBackground(color);
+	symbols().kreb_ClearBackground(color);
 }
 export function BeginDrawing(): void {
-	symbols.kreb_BeginDrawing();
+	symbols().kreb_BeginDrawing();
 }
 export function EndDrawing(): void {
-	symbols.kreb_EndDrawing();
+	symbols().kreb_EndDrawing();
 }
 export function BeginMode2D(camera: Pointer): void {
-	symbols.kreb_BeginMode2D(camera);
+	symbols().kreb_BeginMode2D(camera);
 }
 export function EndMode2D(): void {
-	symbols.kreb_EndMode2D();
+	symbols().kreb_EndMode2D();
 }
 export function BeginMode3D(camera: Pointer): void {
-	symbols.kreb_BeginMode3D(camera);
+	symbols().kreb_BeginMode3D(camera);
 }
 export function EndMode3D(): void {
-	symbols.kreb_EndMode3D();
+	symbols().kreb_EndMode3D();
 }
 export function BeginTextureMode(target: Pointer): void {
-	symbols.kreb_BeginTextureMode(target);
+	symbols().kreb_BeginTextureMode(target);
 }
 export function EndTextureMode(): void {
-	symbols.kreb_EndTextureMode();
+	symbols().kreb_EndTextureMode();
 }
 export function BeginShaderMode(shader: Pointer): void {
-	symbols.kreb_BeginShaderMode(shader);
+	symbols().kreb_BeginShaderMode(shader);
 }
 export function EndShaderMode(): void {
-	symbols.kreb_EndShaderMode();
+	symbols().kreb_EndShaderMode();
 }
 export function BeginBlendMode(mode: number): void {
-	symbols.kreb_BeginBlendMode(mode);
+	symbols().kreb_BeginBlendMode(mode);
 }
 export function EndBlendMode(): void {
-	symbols.kreb_EndBlendMode();
+	symbols().kreb_EndBlendMode();
 }
 export function BeginScissorMode(x: number, y: number, width: number, height: number): void {
-	symbols.kreb_BeginScissorMode(x, y, width, height);
+	symbols().kreb_BeginScissorMode(x, y, width, height);
 }
 export function EndScissorMode(): void {
-	symbols.kreb_EndScissorMode();
+	symbols().kreb_EndScissorMode();
 }
 export function BeginVrStereoMode(config: Pointer): void {
-	symbols.kreb_BeginVrStereoMode(config);
+	symbols().kreb_BeginVrStereoMode(config);
 }
 export function EndVrStereoMode(): void {
-	symbols.kreb_EndVrStereoMode();
+	symbols().kreb_EndVrStereoMode();
 }
 export function LoadVrStereoConfig(device: Pointer): Pointer | null {
-	return symbols.kreb_LoadVrStereoConfig(device);
+	return symbols().kreb_LoadVrStereoConfig(device);
 }
 export function UnloadVrStereoConfig(config: Pointer): void {
-	symbols.kreb_UnloadVrStereoConfig(config);
+	symbols().kreb_UnloadVrStereoConfig(config);
 }
 export function LoadShader(vsFileName: string, fsFileName: string): Pointer | null {
-	return symbols.kreb_LoadShader(cstring(vsFileName), cstring(fsFileName));
+	return symbols().kreb_LoadShader(cstring(vsFileName), cstring(fsFileName));
 }
 export function LoadShaderFromMemory(vsCode: string, fsCode: string): Pointer | null {
-	return symbols.kreb_LoadShaderFromMemory(cstring(vsCode), cstring(fsCode));
+	return symbols().kreb_LoadShaderFromMemory(cstring(vsCode), cstring(fsCode));
 }
 export function IsShaderValid(shader: Pointer): boolean {
-	return symbols.kreb_IsShaderValid(shader) === 1;
+	return symbols().kreb_IsShaderValid(shader) === 1;
 }
 export function GetShaderLocation(shader: Pointer, uniformName: string): number {
-	return symbols.kreb_GetShaderLocation(shader, cstring(uniformName));
+	return symbols().kreb_GetShaderLocation(shader, cstring(uniformName));
 }
 export function GetShaderLocationAttrib(shader: Pointer, attribName: string): number {
-	return symbols.kreb_GetShaderLocationAttrib(shader, cstring(attribName));
+	return symbols().kreb_GetShaderLocationAttrib(shader, cstring(attribName));
 }
 export function SetShaderValue(
 	shader: Pointer,
@@ -1264,7 +1273,7 @@ export function SetShaderValue(
 	value: Pointer,
 	uniformType: number,
 ): void {
-	symbols.kreb_SetShaderValue(shader, locIndex, value, uniformType);
+	symbols().kreb_SetShaderValue(shader, locIndex, value, uniformType);
 }
 export function SetShaderValueV(
 	shader: Pointer,
@@ -1273,23 +1282,23 @@ export function SetShaderValueV(
 	uniformType: number,
 	count: number,
 ): void {
-	symbols.kreb_SetShaderValueV(shader, locIndex, value, uniformType, count);
+	symbols().kreb_SetShaderValueV(shader, locIndex, value, uniformType, count);
 }
 export function SetShaderValueMatrix(shader: Pointer, locIndex: number, mat: Float32Array): void {
-	symbols.kreb_SetShaderValueMatrix(shader, locIndex, ptr(mat));
+	symbols().kreb_SetShaderValueMatrix(shader, locIndex, ptr(mat));
 }
 export function SetShaderValueTexture(shader: Pointer, locIndex: number, texture: Pointer): void {
-	symbols.kreb_SetShaderValueTexture(shader, locIndex, texture);
+	symbols().kreb_SetShaderValueTexture(shader, locIndex, texture);
 }
 export function UnloadShader(shader: Pointer): void {
-	symbols.kreb_UnloadShader(shader);
+	symbols().kreb_UnloadShader(shader);
 }
 export function GetScreenToWorldRay(
 	position_x: number,
 	position_y: number,
 	camera: Pointer,
 ): Float32Array {
-	symbols.kreb_GetScreenToWorldRay(position_x, position_y, camera, scratchPtr);
+	symbols().kreb_GetScreenToWorldRay(position_x, position_y, camera, scratchPtr);
 	return scratch.slice(0, 6);
 }
 export function GetScreenToWorldRayEx(
@@ -1299,7 +1308,7 @@ export function GetScreenToWorldRayEx(
 	width: number,
 	height: number,
 ): Float32Array {
-	symbols.kreb_GetScreenToWorldRayEx(position_x, position_y, camera, width, height, scratchPtr);
+	symbols().kreb_GetScreenToWorldRayEx(position_x, position_y, camera, width, height, scratchPtr);
 	return scratch.slice(0, 6);
 }
 export function GetWorldToScreen(
@@ -1308,7 +1317,7 @@ export function GetWorldToScreen(
 	position_z: number,
 	camera: Pointer,
 ): Float32Array {
-	symbols.kreb_GetWorldToScreen(position_x, position_y, position_z, camera, scratchPtr);
+	symbols().kreb_GetWorldToScreen(position_x, position_y, position_z, camera, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetWorldToScreenEx(
@@ -1319,7 +1328,7 @@ export function GetWorldToScreenEx(
 	width: number,
 	height: number,
 ): Float32Array {
-	symbols.kreb_GetWorldToScreenEx(
+	symbols().kreb_GetWorldToScreenEx(
 		position_x,
 		position_y,
 		position_z,
@@ -1335,7 +1344,7 @@ export function GetWorldToScreen2D(
 	position_y: number,
 	camera: Pointer,
 ): Float32Array {
-	symbols.kreb_GetWorldToScreen2D(position_x, position_y, camera, scratchPtr);
+	symbols().kreb_GetWorldToScreen2D(position_x, position_y, camera, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetScreenToWorld2D(
@@ -1343,204 +1352,208 @@ export function GetScreenToWorld2D(
 	position_y: number,
 	camera: Pointer,
 ): Float32Array {
-	symbols.kreb_GetScreenToWorld2D(position_x, position_y, camera, scratchPtr);
+	symbols().kreb_GetScreenToWorld2D(position_x, position_y, camera, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetCameraMatrix(camera: Pointer): Float32Array {
-	symbols.kreb_GetCameraMatrix(camera, scratchPtr);
+	symbols().kreb_GetCameraMatrix(camera, scratchPtr);
 	return scratch.slice(0, 16);
 }
 export function GetCameraMatrix2D(camera: Pointer): Float32Array {
-	symbols.kreb_GetCameraMatrix2D(camera, scratchPtr);
+	symbols().kreb_GetCameraMatrix2D(camera, scratchPtr);
 	return scratch.slice(0, 16);
 }
 export function SetTargetFPS(fps: number): void {
-	symbols.kreb_SetTargetFPS(fps);
+	symbols().kreb_SetTargetFPS(fps);
 }
 export function GetFrameTime(): number {
-	return symbols.kreb_GetFrameTime();
+	return symbols().kreb_GetFrameTime();
 }
 export function GetTime(): number {
-	return symbols.kreb_GetTime();
+	return symbols().kreb_GetTime();
 }
 export function GetFPS(): number {
-	return symbols.kreb_GetFPS();
+	return symbols().kreb_GetFPS();
 }
 export function SwapScreenBuffer(): void {
-	symbols.kreb_SwapScreenBuffer();
+	symbols().kreb_SwapScreenBuffer();
 }
 export function PollInputEvents(): void {
-	symbols.kreb_PollInputEvents();
+	symbols().kreb_PollInputEvents();
 }
 export function WaitTime(seconds: number): void {
-	symbols.kreb_WaitTime(seconds);
+	symbols().kreb_WaitTime(seconds);
 }
 export function SetRandomSeed(seed: number): void {
-	symbols.kreb_SetRandomSeed(seed);
+	symbols().kreb_SetRandomSeed(seed);
 }
 export function GetRandomValue(min: number, max: number): number {
-	return symbols.kreb_GetRandomValue(min, max);
+	return symbols().kreb_GetRandomValue(min, max);
 }
 export function LoadRandomSequence(count: number, min: number, max: number): Pointer | null {
-	return symbols.kreb_LoadRandomSequence(count, min, max);
+	return symbols().kreb_LoadRandomSequence(count, min, max);
 }
 export function UnloadRandomSequence(sequence: Pointer): void {
-	symbols.kreb_UnloadRandomSequence(sequence);
+	symbols().kreb_UnloadRandomSequence(sequence);
 }
 export function TakeScreenshot(fileName: string): void {
-	symbols.kreb_TakeScreenshot(cstring(fileName));
+	symbols().kreb_TakeScreenshot(cstring(fileName));
 }
 export function SetConfigFlags(flags: number): void {
-	symbols.kreb_SetConfigFlags(flags);
+	symbols().kreb_SetConfigFlags(flags);
 }
 export function OpenURL(url: string): void {
-	symbols.kreb_OpenURL(cstring(url));
+	symbols().kreb_OpenURL(cstring(url));
 }
 export function SetTraceLogLevel(logLevel: number): void {
-	symbols.kreb_SetTraceLogLevel(logLevel);
+	symbols().kreb_SetTraceLogLevel(logLevel);
 }
 export function SetTraceLogCallback(callback: Pointer): void {
-	symbols.kreb_SetTraceLogCallback(callback);
+	symbols().kreb_SetTraceLogCallback(callback);
 }
 export function MemAlloc(size: number): Pointer | null {
-	return symbols.kreb_MemAlloc(size);
+	return symbols().kreb_MemAlloc(size);
 }
 export function MemRealloc(ptr: Pointer, size: number): Pointer | null {
-	return symbols.kreb_MemRealloc(ptr, size);
+	return symbols().kreb_MemRealloc(ptr, size);
 }
 export function MemFree(ptr: Pointer): void {
-	symbols.kreb_MemFree(ptr);
+	symbols().kreb_MemFree(ptr);
 }
 export function LoadFileData(fileName: string, dataSize: Pointer): Pointer | null {
-	return symbols.kreb_LoadFileData(cstring(fileName), dataSize);
+	return symbols().kreb_LoadFileData(cstring(fileName), dataSize);
 }
 export function UnloadFileData(data: Pointer): void {
-	symbols.kreb_UnloadFileData(data);
+	symbols().kreb_UnloadFileData(data);
 }
 export function SaveFileData(fileName: string, data: Pointer, dataSize: number): boolean {
-	return symbols.kreb_SaveFileData(cstring(fileName), data, dataSize) === 1;
+	return symbols().kreb_SaveFileData(cstring(fileName), data, dataSize) === 1;
 }
 export function ExportDataAsCode(data: Pointer, dataSize: number, fileName: string): boolean {
-	return symbols.kreb_ExportDataAsCode(data, dataSize, cstring(fileName)) === 1;
+	return symbols().kreb_ExportDataAsCode(data, dataSize, cstring(fileName)) === 1;
 }
 export function LoadFileText(fileName: string): Pointer | null {
-	return symbols.kreb_LoadFileText(cstring(fileName));
+	return symbols().kreb_LoadFileText(cstring(fileName));
 }
 export function UnloadFileText(text: Pointer): void {
-	symbols.kreb_UnloadFileText(text);
+	symbols().kreb_UnloadFileText(text);
 }
 export function SaveFileText(fileName: string, text: string): boolean {
-	return symbols.kreb_SaveFileText(cstring(fileName), cstring(text)) === 1;
+	return symbols().kreb_SaveFileText(cstring(fileName), cstring(text)) === 1;
 }
 export function SetLoadFileDataCallback(callback: Pointer): void {
-	symbols.kreb_SetLoadFileDataCallback(callback);
+	symbols().kreb_SetLoadFileDataCallback(callback);
 }
 export function SetSaveFileDataCallback(callback: Pointer): void {
-	symbols.kreb_SetSaveFileDataCallback(callback);
+	symbols().kreb_SetSaveFileDataCallback(callback);
 }
 export function SetLoadFileTextCallback(callback: Pointer): void {
-	symbols.kreb_SetLoadFileTextCallback(callback);
+	symbols().kreb_SetLoadFileTextCallback(callback);
 }
 export function SetSaveFileTextCallback(callback: Pointer): void {
-	symbols.kreb_SetSaveFileTextCallback(callback);
+	symbols().kreb_SetSaveFileTextCallback(callback);
 }
 export function FileRename(fileName: string, fileRename: string): number {
-	return symbols.kreb_FileRename(cstring(fileName), cstring(fileRename));
+	return symbols().kreb_FileRename(cstring(fileName), cstring(fileRename));
 }
 export function FileRemove(fileName: string): number {
-	return symbols.kreb_FileRemove(cstring(fileName));
+	return symbols().kreb_FileRemove(cstring(fileName));
 }
 export function FileCopy(srcPath: string, dstPath: string): number {
-	return symbols.kreb_FileCopy(cstring(srcPath), cstring(dstPath));
+	return symbols().kreb_FileCopy(cstring(srcPath), cstring(dstPath));
 }
 export function FileMove(srcPath: string, dstPath: string): number {
-	return symbols.kreb_FileMove(cstring(srcPath), cstring(dstPath));
+	return symbols().kreb_FileMove(cstring(srcPath), cstring(dstPath));
 }
 export function FileTextReplace(fileName: string, search: string, replacement: string): number {
-	return symbols.kreb_FileTextReplace(cstring(fileName), cstring(search), cstring(replacement));
+	return symbols().kreb_FileTextReplace(cstring(fileName), cstring(search), cstring(replacement));
 }
 export function FileTextFindIndex(fileName: string, search: string): number {
-	return symbols.kreb_FileTextFindIndex(cstring(fileName), cstring(search));
+	return symbols().kreb_FileTextFindIndex(cstring(fileName), cstring(search));
 }
 export function FileExists(fileName: string): boolean {
-	return symbols.kreb_FileExists(cstring(fileName)) === 1;
+	return symbols().kreb_FileExists(cstring(fileName)) === 1;
 }
 export function DirectoryExists(dirPath: string): boolean {
-	return symbols.kreb_DirectoryExists(cstring(dirPath)) === 1;
+	return symbols().kreb_DirectoryExists(cstring(dirPath)) === 1;
 }
 export function IsFileExtension(fileName: string, ext: string): boolean {
-	return symbols.kreb_IsFileExtension(cstring(fileName), cstring(ext)) === 1;
+	return symbols().kreb_IsFileExtension(cstring(fileName), cstring(ext)) === 1;
 }
 export function GetFileLength(fileName: string): number {
-	return symbols.kreb_GetFileLength(cstring(fileName));
+	return symbols().kreb_GetFileLength(cstring(fileName));
 }
 export function GetFileModTime(fileName: string): bigint {
-	return symbols.kreb_GetFileModTime(cstring(fileName));
+	return symbols().kreb_GetFileModTime(cstring(fileName));
 }
 export function GetFileExtension(fileName: string): string {
-	return readCString(symbols.kreb_GetFileExtension(cstring(fileName)));
+	return readCString(symbols().kreb_GetFileExtension(cstring(fileName)));
 }
 export function GetFileName(filePath: string): string {
-	return readCString(symbols.kreb_GetFileName(cstring(filePath)));
+	return readCString(symbols().kreb_GetFileName(cstring(filePath)));
 }
 export function GetFileNameWithoutExt(filePath: string): string {
-	return readCString(symbols.kreb_GetFileNameWithoutExt(cstring(filePath)));
+	return readCString(symbols().kreb_GetFileNameWithoutExt(cstring(filePath)));
 }
 export function GetDirectoryPath(filePath: string): string {
-	return readCString(symbols.kreb_GetDirectoryPath(cstring(filePath)));
+	return readCString(symbols().kreb_GetDirectoryPath(cstring(filePath)));
 }
 export function GetPrevDirectoryPath(dirPath: string): string {
-	return readCString(symbols.kreb_GetPrevDirectoryPath(cstring(dirPath)));
+	return readCString(symbols().kreb_GetPrevDirectoryPath(cstring(dirPath)));
 }
 export function GetWorkingDirectory(): string {
-	return readCString(symbols.kreb_GetWorkingDirectory());
+	return readCString(symbols().kreb_GetWorkingDirectory());
 }
 export function GetApplicationDirectory(): string {
-	return readCString(symbols.kreb_GetApplicationDirectory());
+	return readCString(symbols().kreb_GetApplicationDirectory());
 }
 export function MakeDirectory(dirPath: string): number {
-	return symbols.kreb_MakeDirectory(cstring(dirPath));
+	return symbols().kreb_MakeDirectory(cstring(dirPath));
 }
 export function ChangeDirectory(dirPath: string): boolean {
-	return symbols.kreb_ChangeDirectory(cstring(dirPath)) === 1;
+	return symbols().kreb_ChangeDirectory(cstring(dirPath)) === 1;
 }
 export function IsPathFile(path: string): boolean {
-	return symbols.kreb_IsPathFile(cstring(path)) === 1;
+	return symbols().kreb_IsPathFile(cstring(path)) === 1;
 }
 export function IsFileNameValid(fileName: string): boolean {
-	return symbols.kreb_IsFileNameValid(cstring(fileName)) === 1;
+	return symbols().kreb_IsFileNameValid(cstring(fileName)) === 1;
 }
 export function LoadDirectoryFiles(dirPath: string): Pointer | null {
-	return symbols.kreb_LoadDirectoryFiles(cstring(dirPath));
+	return symbols().kreb_LoadDirectoryFiles(cstring(dirPath));
 }
 export function LoadDirectoryFilesEx(
 	basePath: string,
 	filter: string,
 	scanSubdirs: boolean,
 ): Pointer | null {
-	return symbols.kreb_LoadDirectoryFilesEx(cstring(basePath), cstring(filter), scanSubdirs ? 1 : 0);
+	return symbols().kreb_LoadDirectoryFilesEx(
+		cstring(basePath),
+		cstring(filter),
+		scanSubdirs ? 1 : 0,
+	);
 }
 export function UnloadDirectoryFiles(files: Pointer): void {
-	symbols.kreb_UnloadDirectoryFiles(files);
+	symbols().kreb_UnloadDirectoryFiles(files);
 }
 export function IsFileDropped(): boolean {
-	return symbols.kreb_IsFileDropped() === 1;
+	return symbols().kreb_IsFileDropped() === 1;
 }
 export function LoadDroppedFiles(): Pointer | null {
-	return symbols.kreb_LoadDroppedFiles();
+	return symbols().kreb_LoadDroppedFiles();
 }
 export function UnloadDroppedFiles(files: Pointer): void {
-	symbols.kreb_UnloadDroppedFiles(files);
+	symbols().kreb_UnloadDroppedFiles(files);
 }
 export function GetDirectoryFileCount(dirPath: string): number {
-	return symbols.kreb_GetDirectoryFileCount(cstring(dirPath));
+	return symbols().kreb_GetDirectoryFileCount(cstring(dirPath));
 }
 export function GetDirectoryFileCountEx(
 	basePath: string,
 	filter: string,
 	scanSubdirs: boolean,
 ): number {
-	return symbols.kreb_GetDirectoryFileCountEx(
+	return symbols().kreb_GetDirectoryFileCountEx(
 		cstring(basePath),
 		cstring(filter),
 		scanSubdirs ? 1 : 0,
@@ -1551,117 +1564,117 @@ export function CompressData(
 	dataSize: number,
 	compDataSize: Pointer,
 ): Pointer | null {
-	return symbols.kreb_CompressData(data, dataSize, compDataSize);
+	return symbols().kreb_CompressData(data, dataSize, compDataSize);
 }
 export function DecompressData(
 	compData: Pointer,
 	compDataSize: number,
 	dataSize: Pointer,
 ): Pointer | null {
-	return symbols.kreb_DecompressData(compData, compDataSize, dataSize);
+	return symbols().kreb_DecompressData(compData, compDataSize, dataSize);
 }
 export function EncodeDataBase64(
 	data: Pointer,
 	dataSize: number,
 	outputSize: Pointer,
 ): Pointer | null {
-	return symbols.kreb_EncodeDataBase64(data, dataSize, outputSize);
+	return symbols().kreb_EncodeDataBase64(data, dataSize, outputSize);
 }
 export function DecodeDataBase64(text: string, outputSize: Pointer): Pointer | null {
-	return symbols.kreb_DecodeDataBase64(cstring(text), outputSize);
+	return symbols().kreb_DecodeDataBase64(cstring(text), outputSize);
 }
 export function ComputeCRC32(data: Pointer, dataSize: number): number {
-	return symbols.kreb_ComputeCRC32(data, dataSize);
+	return symbols().kreb_ComputeCRC32(data, dataSize);
 }
 export function ComputeMD5(data: Pointer, dataSize: number): Pointer | null {
-	return symbols.kreb_ComputeMD5(data, dataSize);
+	return symbols().kreb_ComputeMD5(data, dataSize);
 }
 export function ComputeSHA1(data: Pointer, dataSize: number): Pointer | null {
-	return symbols.kreb_ComputeSHA1(data, dataSize);
+	return symbols().kreb_ComputeSHA1(data, dataSize);
 }
 export function ComputeSHA256(data: Pointer, dataSize: number): Pointer | null {
-	return symbols.kreb_ComputeSHA256(data, dataSize);
+	return symbols().kreb_ComputeSHA256(data, dataSize);
 }
 export function LoadAutomationEventList(fileName: string): Pointer | null {
-	return symbols.kreb_LoadAutomationEventList(cstring(fileName));
+	return symbols().kreb_LoadAutomationEventList(cstring(fileName));
 }
 export function UnloadAutomationEventList(list: Pointer): void {
-	symbols.kreb_UnloadAutomationEventList(list);
+	symbols().kreb_UnloadAutomationEventList(list);
 }
 export function ExportAutomationEventList(list: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportAutomationEventList(list, cstring(fileName)) === 1;
+	return symbols().kreb_ExportAutomationEventList(list, cstring(fileName)) === 1;
 }
 export function SetAutomationEventList(list: Pointer): void {
-	symbols.kreb_SetAutomationEventList(list);
+	symbols().kreb_SetAutomationEventList(list);
 }
 export function SetAutomationEventBaseFrame(frame: number): void {
-	symbols.kreb_SetAutomationEventBaseFrame(frame);
+	symbols().kreb_SetAutomationEventBaseFrame(frame);
 }
 export function StartAutomationEventRecording(): void {
-	symbols.kreb_StartAutomationEventRecording();
+	symbols().kreb_StartAutomationEventRecording();
 }
 export function StopAutomationEventRecording(): void {
-	symbols.kreb_StopAutomationEventRecording();
+	symbols().kreb_StopAutomationEventRecording();
 }
 export function PlayAutomationEvent(event: Pointer): void {
-	symbols.kreb_PlayAutomationEvent(event);
+	symbols().kreb_PlayAutomationEvent(event);
 }
 export function IsKeyPressed(key: number): boolean {
-	return symbols.kreb_IsKeyPressed(key) === 1;
+	return symbols().kreb_IsKeyPressed(key) === 1;
 }
 export function IsKeyPressedRepeat(key: number): boolean {
-	return symbols.kreb_IsKeyPressedRepeat(key) === 1;
+	return symbols().kreb_IsKeyPressedRepeat(key) === 1;
 }
 export function IsKeyDown(key: number): boolean {
-	return symbols.kreb_IsKeyDown(key) === 1;
+	return symbols().kreb_IsKeyDown(key) === 1;
 }
 export function IsKeyReleased(key: number): boolean {
-	return symbols.kreb_IsKeyReleased(key) === 1;
+	return symbols().kreb_IsKeyReleased(key) === 1;
 }
 export function IsKeyUp(key: number): boolean {
-	return symbols.kreb_IsKeyUp(key) === 1;
+	return symbols().kreb_IsKeyUp(key) === 1;
 }
 export function GetKeyPressed(): number {
-	return symbols.kreb_GetKeyPressed();
+	return symbols().kreb_GetKeyPressed();
 }
 export function GetCharPressed(): number {
-	return symbols.kreb_GetCharPressed();
+	return symbols().kreb_GetCharPressed();
 }
 export function GetKeyName(key: number): string {
-	return readCString(symbols.kreb_GetKeyName(key));
+	return readCString(symbols().kreb_GetKeyName(key));
 }
 export function SetExitKey(key: number): void {
-	symbols.kreb_SetExitKey(key);
+	symbols().kreb_SetExitKey(key);
 }
 export function IsGamepadAvailable(gamepad: number): boolean {
-	return symbols.kreb_IsGamepadAvailable(gamepad) === 1;
+	return symbols().kreb_IsGamepadAvailable(gamepad) === 1;
 }
 export function GetGamepadName(gamepad: number): string {
-	return readCString(symbols.kreb_GetGamepadName(gamepad));
+	return readCString(symbols().kreb_GetGamepadName(gamepad));
 }
 export function IsGamepadButtonPressed(gamepad: number, button: number): boolean {
-	return symbols.kreb_IsGamepadButtonPressed(gamepad, button) === 1;
+	return symbols().kreb_IsGamepadButtonPressed(gamepad, button) === 1;
 }
 export function IsGamepadButtonDown(gamepad: number, button: number): boolean {
-	return symbols.kreb_IsGamepadButtonDown(gamepad, button) === 1;
+	return symbols().kreb_IsGamepadButtonDown(gamepad, button) === 1;
 }
 export function IsGamepadButtonReleased(gamepad: number, button: number): boolean {
-	return symbols.kreb_IsGamepadButtonReleased(gamepad, button) === 1;
+	return symbols().kreb_IsGamepadButtonReleased(gamepad, button) === 1;
 }
 export function IsGamepadButtonUp(gamepad: number, button: number): boolean {
-	return symbols.kreb_IsGamepadButtonUp(gamepad, button) === 1;
+	return symbols().kreb_IsGamepadButtonUp(gamepad, button) === 1;
 }
 export function GetGamepadButtonPressed(): number {
-	return symbols.kreb_GetGamepadButtonPressed();
+	return symbols().kreb_GetGamepadButtonPressed();
 }
 export function GetGamepadAxisCount(gamepad: number): number {
-	return symbols.kreb_GetGamepadAxisCount(gamepad);
+	return symbols().kreb_GetGamepadAxisCount(gamepad);
 }
 export function GetGamepadAxisMovement(gamepad: number, axis: number): number {
-	return symbols.kreb_GetGamepadAxisMovement(gamepad, axis);
+	return symbols().kreb_GetGamepadAxisMovement(gamepad, axis);
 }
 export function SetGamepadMappings(mappings: string): number {
-	return symbols.kreb_SetGamepadMappings(cstring(mappings));
+	return symbols().kreb_SetGamepadMappings(cstring(mappings));
 }
 export function SetGamepadVibration(
 	gamepad: number,
@@ -1669,97 +1682,97 @@ export function SetGamepadVibration(
 	rightMotor: number,
 	duration: number,
 ): void {
-	symbols.kreb_SetGamepadVibration(gamepad, leftMotor, rightMotor, duration);
+	symbols().kreb_SetGamepadVibration(gamepad, leftMotor, rightMotor, duration);
 }
 export function IsMouseButtonPressed(button: number): boolean {
-	return symbols.kreb_IsMouseButtonPressed(button) === 1;
+	return symbols().kreb_IsMouseButtonPressed(button) === 1;
 }
 export function IsMouseButtonDown(button: number): boolean {
-	return symbols.kreb_IsMouseButtonDown(button) === 1;
+	return symbols().kreb_IsMouseButtonDown(button) === 1;
 }
 export function IsMouseButtonReleased(button: number): boolean {
-	return symbols.kreb_IsMouseButtonReleased(button) === 1;
+	return symbols().kreb_IsMouseButtonReleased(button) === 1;
 }
 export function IsMouseButtonUp(button: number): boolean {
-	return symbols.kreb_IsMouseButtonUp(button) === 1;
+	return symbols().kreb_IsMouseButtonUp(button) === 1;
 }
 export function GetMouseX(): number {
-	return symbols.kreb_GetMouseX();
+	return symbols().kreb_GetMouseX();
 }
 export function GetMouseY(): number {
-	return symbols.kreb_GetMouseY();
+	return symbols().kreb_GetMouseY();
 }
 export function GetMousePosition(): Float32Array {
-	symbols.kreb_GetMousePosition(scratchPtr);
+	symbols().kreb_GetMousePosition(scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetMouseDelta(): Float32Array {
-	symbols.kreb_GetMouseDelta(scratchPtr);
+	symbols().kreb_GetMouseDelta(scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function SetMousePosition(x: number, y: number): void {
-	symbols.kreb_SetMousePosition(x, y);
+	symbols().kreb_SetMousePosition(x, y);
 }
 export function SetMouseOffset(offsetX: number, offsetY: number): void {
-	symbols.kreb_SetMouseOffset(offsetX, offsetY);
+	symbols().kreb_SetMouseOffset(offsetX, offsetY);
 }
 export function SetMouseScale(scaleX: number, scaleY: number): void {
-	symbols.kreb_SetMouseScale(scaleX, scaleY);
+	symbols().kreb_SetMouseScale(scaleX, scaleY);
 }
 export function GetMouseWheelMove(): number {
-	return symbols.kreb_GetMouseWheelMove();
+	return symbols().kreb_GetMouseWheelMove();
 }
 export function GetMouseWheelMoveV(): Float32Array {
-	symbols.kreb_GetMouseWheelMoveV(scratchPtr);
+	symbols().kreb_GetMouseWheelMoveV(scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function SetMouseCursor(cursor: number): void {
-	symbols.kreb_SetMouseCursor(cursor);
+	symbols().kreb_SetMouseCursor(cursor);
 }
 export function GetTouchX(): number {
-	return symbols.kreb_GetTouchX();
+	return symbols().kreb_GetTouchX();
 }
 export function GetTouchY(): number {
-	return symbols.kreb_GetTouchY();
+	return symbols().kreb_GetTouchY();
 }
 export function GetTouchPosition(index: number): Float32Array {
-	symbols.kreb_GetTouchPosition(index, scratchPtr);
+	symbols().kreb_GetTouchPosition(index, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetTouchPointId(index: number): number {
-	return symbols.kreb_GetTouchPointId(index);
+	return symbols().kreb_GetTouchPointId(index);
 }
 export function GetTouchPointCount(): number {
-	return symbols.kreb_GetTouchPointCount();
+	return symbols().kreb_GetTouchPointCount();
 }
 export function SetGesturesEnabled(flags: number): void {
-	symbols.kreb_SetGesturesEnabled(flags);
+	symbols().kreb_SetGesturesEnabled(flags);
 }
 export function IsGestureDetected(gesture: number): boolean {
-	return symbols.kreb_IsGestureDetected(gesture) === 1;
+	return symbols().kreb_IsGestureDetected(gesture) === 1;
 }
 export function GetGestureDetected(): number {
-	return symbols.kreb_GetGestureDetected();
+	return symbols().kreb_GetGestureDetected();
 }
 export function GetGestureHoldDuration(): number {
-	return symbols.kreb_GetGestureHoldDuration();
+	return symbols().kreb_GetGestureHoldDuration();
 }
 export function GetGestureDragVector(): Float32Array {
-	symbols.kreb_GetGestureDragVector(scratchPtr);
+	symbols().kreb_GetGestureDragVector(scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetGestureDragAngle(): number {
-	return symbols.kreb_GetGestureDragAngle();
+	return symbols().kreb_GetGestureDragAngle();
 }
 export function GetGesturePinchVector(): Float32Array {
-	symbols.kreb_GetGesturePinchVector(scratchPtr);
+	symbols().kreb_GetGesturePinchVector(scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetGesturePinchAngle(): number {
-	return symbols.kreb_GetGesturePinchAngle();
+	return symbols().kreb_GetGesturePinchAngle();
 }
 export function UpdateCamera(camera: Pointer, mode: number): void {
-	symbols.kreb_UpdateCamera(camera, mode);
+	symbols().kreb_UpdateCamera(camera, mode);
 }
 export function UpdateCameraPro(
 	camera: Pointer,
@@ -1771,7 +1784,7 @@ export function UpdateCameraPro(
 	rotation_z: number,
 	zoom: number,
 ): void {
-	symbols.kreb_UpdateCameraPro(
+	symbols().kreb_UpdateCameraPro(
 		camera,
 		movement_x,
 		movement_y,
@@ -1789,20 +1802,20 @@ export function SetShapesTexture(
 	source_width: number,
 	source_height: number,
 ): void {
-	symbols.kreb_SetShapesTexture(texture, source_x, source_y, source_width, source_height);
+	symbols().kreb_SetShapesTexture(texture, source_x, source_y, source_width, source_height);
 }
 export function GetShapesTexture(): Pointer | null {
-	return symbols.kreb_GetShapesTexture();
+	return symbols().kreb_GetShapesTexture();
 }
 export function GetShapesTextureRectangle(): Float32Array {
-	symbols.kreb_GetShapesTextureRectangle(scratchPtr);
+	symbols().kreb_GetShapesTextureRectangle(scratchPtr);
 	return scratch.slice(0, 4);
 }
 export function DrawPixel(posX: number, posY: number, color: number): void {
-	symbols.kreb_DrawPixel(posX, posY, color);
+	symbols().kreb_DrawPixel(posX, posY, color);
 }
 export function DrawPixelV(position_x: number, position_y: number, color: number): void {
-	symbols.kreb_DrawPixelV(position_x, position_y, color);
+	symbols().kreb_DrawPixelV(position_x, position_y, color);
 }
 export function DrawLine(
 	startPosX: number,
@@ -1811,7 +1824,7 @@ export function DrawLine(
 	endPosY: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawLine(startPosX, startPosY, endPosX, endPosY, color);
+	symbols().kreb_DrawLine(startPosX, startPosY, endPosX, endPosY, color);
 }
 export function DrawLineV(
 	startPos_x: number,
@@ -1820,7 +1833,7 @@ export function DrawLineV(
 	endPos_y: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawLineV(startPos_x, startPos_y, endPos_x, endPos_y, color);
+	symbols().kreb_DrawLineV(startPos_x, startPos_y, endPos_x, endPos_y, color);
 }
 export function DrawLineEx(
 	startPos_x: number,
@@ -1830,10 +1843,10 @@ export function DrawLineEx(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawLineEx(startPos_x, startPos_y, endPos_x, endPos_y, thick, color);
+	symbols().kreb_DrawLineEx(startPos_x, startPos_y, endPos_x, endPos_y, thick, color);
 }
 export function DrawLineStrip(points: Pointer, pointCount: number, color: number): void {
-	symbols.kreb_DrawLineStrip(points, pointCount, color);
+	symbols().kreb_DrawLineStrip(points, pointCount, color);
 }
 export function DrawLineBezier(
 	startPos_x: number,
@@ -1843,7 +1856,7 @@ export function DrawLineBezier(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawLineBezier(startPos_x, startPos_y, endPos_x, endPos_y, thick, color);
+	symbols().kreb_DrawLineBezier(startPos_x, startPos_y, endPos_x, endPos_y, thick, color);
 }
 export function DrawLineDashed(
 	startPos_x: number,
@@ -1854,7 +1867,7 @@ export function DrawLineDashed(
 	spaceSize: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawLineDashed(
+	symbols().kreb_DrawLineDashed(
 		startPos_x,
 		startPos_y,
 		endPos_x,
@@ -1865,7 +1878,7 @@ export function DrawLineDashed(
 	);
 }
 export function DrawCircle(centerX: number, centerY: number, radius: number, color: number): void {
-	symbols.kreb_DrawCircle(centerX, centerY, radius, color);
+	symbols().kreb_DrawCircle(centerX, centerY, radius, color);
 }
 export function DrawCircleV(
 	center_x: number,
@@ -1873,7 +1886,7 @@ export function DrawCircleV(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCircleV(center_x, center_y, radius, color);
+	symbols().kreb_DrawCircleV(center_x, center_y, radius, color);
 }
 export function DrawCircleGradient(
 	center_x: number,
@@ -1882,7 +1895,7 @@ export function DrawCircleGradient(
 	inner: number,
 	outer: number,
 ): void {
-	symbols.kreb_DrawCircleGradient(center_x, center_y, radius, inner, outer);
+	symbols().kreb_DrawCircleGradient(center_x, center_y, radius, inner, outer);
 }
 export function DrawCircleSector(
 	center_x: number,
@@ -1893,7 +1906,15 @@ export function DrawCircleSector(
 	segments: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCircleSector(center_x, center_y, radius, startAngle, endAngle, segments, color);
+	symbols().kreb_DrawCircleSector(
+		center_x,
+		center_y,
+		radius,
+		startAngle,
+		endAngle,
+		segments,
+		color,
+	);
 }
 export function DrawCircleSectorLines(
 	center_x: number,
@@ -1904,7 +1925,7 @@ export function DrawCircleSectorLines(
 	segments: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCircleSectorLines(
+	symbols().kreb_DrawCircleSectorLines(
 		center_x,
 		center_y,
 		radius,
@@ -1920,7 +1941,7 @@ export function DrawCircleLines(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCircleLines(centerX, centerY, radius, color);
+	symbols().kreb_DrawCircleLines(centerX, centerY, radius, color);
 }
 export function DrawCircleLinesV(
 	center_x: number,
@@ -1928,7 +1949,7 @@ export function DrawCircleLinesV(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCircleLinesV(center_x, center_y, radius, color);
+	symbols().kreb_DrawCircleLinesV(center_x, center_y, radius, color);
 }
 export function DrawEllipse(
 	centerX: number,
@@ -1937,7 +1958,7 @@ export function DrawEllipse(
 	radiusV: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawEllipse(centerX, centerY, radiusH, radiusV, color);
+	symbols().kreb_DrawEllipse(centerX, centerY, radiusH, radiusV, color);
 }
 export function DrawEllipseV(
 	center_x: number,
@@ -1946,7 +1967,7 @@ export function DrawEllipseV(
 	radiusV: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawEllipseV(center_x, center_y, radiusH, radiusV, color);
+	symbols().kreb_DrawEllipseV(center_x, center_y, radiusH, radiusV, color);
 }
 export function DrawEllipseLines(
 	centerX: number,
@@ -1955,7 +1976,7 @@ export function DrawEllipseLines(
 	radiusV: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawEllipseLines(centerX, centerY, radiusH, radiusV, color);
+	symbols().kreb_DrawEllipseLines(centerX, centerY, radiusH, radiusV, color);
 }
 export function DrawEllipseLinesV(
 	center_x: number,
@@ -1964,7 +1985,7 @@ export function DrawEllipseLinesV(
 	radiusV: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawEllipseLinesV(center_x, center_y, radiusH, radiusV, color);
+	symbols().kreb_DrawEllipseLinesV(center_x, center_y, radiusH, radiusV, color);
 }
 export function DrawRing(
 	center_x: number,
@@ -1976,7 +1997,7 @@ export function DrawRing(
 	segments: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRing(
+	symbols().kreb_DrawRing(
 		center_x,
 		center_y,
 		innerRadius,
@@ -1997,7 +2018,7 @@ export function DrawRingLines(
 	segments: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRingLines(
+	symbols().kreb_DrawRingLines(
 		center_x,
 		center_y,
 		innerRadius,
@@ -2015,7 +2036,7 @@ export function DrawRectangle(
 	height: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangle(posX, posY, width, height, color);
+	symbols().kreb_DrawRectangle(posX, posY, width, height, color);
 }
 export function DrawRectangleV(
 	position_x: number,
@@ -2024,7 +2045,7 @@ export function DrawRectangleV(
 	size_y: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangleV(position_x, position_y, size_x, size_y, color);
+	symbols().kreb_DrawRectangleV(position_x, position_y, size_x, size_y, color);
 }
 export function DrawRectangleRec(
 	rec_x: number,
@@ -2033,7 +2054,7 @@ export function DrawRectangleRec(
 	rec_height: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangleRec(rec_x, rec_y, rec_width, rec_height, color);
+	symbols().kreb_DrawRectangleRec(rec_x, rec_y, rec_width, rec_height, color);
 }
 export function DrawRectanglePro(
 	rec_x: number,
@@ -2045,7 +2066,7 @@ export function DrawRectanglePro(
 	rotation: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectanglePro(
+	symbols().kreb_DrawRectanglePro(
 		rec_x,
 		rec_y,
 		rec_width,
@@ -2064,7 +2085,7 @@ export function DrawRectangleGradientV(
 	top: number,
 	bottom: number,
 ): void {
-	symbols.kreb_DrawRectangleGradientV(posX, posY, width, height, top, bottom);
+	symbols().kreb_DrawRectangleGradientV(posX, posY, width, height, top, bottom);
 }
 export function DrawRectangleGradientH(
 	posX: number,
@@ -2074,7 +2095,7 @@ export function DrawRectangleGradientH(
 	left: number,
 	right: number,
 ): void {
-	symbols.kreb_DrawRectangleGradientH(posX, posY, width, height, left, right);
+	symbols().kreb_DrawRectangleGradientH(posX, posY, width, height, left, right);
 }
 export function DrawRectangleGradientEx(
 	rec_x: number,
@@ -2086,7 +2107,7 @@ export function DrawRectangleGradientEx(
 	bottomRight: number,
 	topRight: number,
 ): void {
-	symbols.kreb_DrawRectangleGradientEx(
+	symbols().kreb_DrawRectangleGradientEx(
 		rec_x,
 		rec_y,
 		rec_width,
@@ -2104,7 +2125,7 @@ export function DrawRectangleLines(
 	height: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangleLines(posX, posY, width, height, color);
+	symbols().kreb_DrawRectangleLines(posX, posY, width, height, color);
 }
 export function DrawRectangleLinesEx(
 	rec_x: number,
@@ -2114,7 +2135,7 @@ export function DrawRectangleLinesEx(
 	lineThick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangleLinesEx(rec_x, rec_y, rec_width, rec_height, lineThick, color);
+	symbols().kreb_DrawRectangleLinesEx(rec_x, rec_y, rec_width, rec_height, lineThick, color);
 }
 export function DrawRectangleRounded(
 	rec_x: number,
@@ -2125,7 +2146,7 @@ export function DrawRectangleRounded(
 	segments: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangleRounded(
+	symbols().kreb_DrawRectangleRounded(
 		rec_x,
 		rec_y,
 		rec_width,
@@ -2144,7 +2165,7 @@ export function DrawRectangleRoundedLines(
 	segments: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangleRoundedLines(
+	symbols().kreb_DrawRectangleRoundedLines(
 		rec_x,
 		rec_y,
 		rec_width,
@@ -2164,7 +2185,7 @@ export function DrawRectangleRoundedLinesEx(
 	lineThick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRectangleRoundedLinesEx(
+	symbols().kreb_DrawRectangleRoundedLinesEx(
 		rec_x,
 		rec_y,
 		rec_width,
@@ -2184,7 +2205,7 @@ export function DrawTriangle(
 	v3_y: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawTriangle(v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
+	symbols().kreb_DrawTriangle(v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
 }
 export function DrawTriangleLines(
 	v1_x: number,
@@ -2195,13 +2216,13 @@ export function DrawTriangleLines(
 	v3_y: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawTriangleLines(v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
+	symbols().kreb_DrawTriangleLines(v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
 }
 export function DrawTriangleFan(points: Pointer, pointCount: number, color: number): void {
-	symbols.kreb_DrawTriangleFan(points, pointCount, color);
+	symbols().kreb_DrawTriangleFan(points, pointCount, color);
 }
 export function DrawTriangleStrip(points: Pointer, pointCount: number, color: number): void {
-	symbols.kreb_DrawTriangleStrip(points, pointCount, color);
+	symbols().kreb_DrawTriangleStrip(points, pointCount, color);
 }
 export function DrawPoly(
 	center_x: number,
@@ -2211,7 +2232,7 @@ export function DrawPoly(
 	rotation: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawPoly(center_x, center_y, sides, radius, rotation, color);
+	symbols().kreb_DrawPoly(center_x, center_y, sides, radius, rotation, color);
 }
 export function DrawPolyLines(
 	center_x: number,
@@ -2221,7 +2242,7 @@ export function DrawPolyLines(
 	rotation: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawPolyLines(center_x, center_y, sides, radius, rotation, color);
+	symbols().kreb_DrawPolyLines(center_x, center_y, sides, radius, rotation, color);
 }
 export function DrawPolyLinesEx(
 	center_x: number,
@@ -2232,7 +2253,7 @@ export function DrawPolyLinesEx(
 	lineThick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawPolyLinesEx(center_x, center_y, sides, radius, rotation, lineThick, color);
+	symbols().kreb_DrawPolyLinesEx(center_x, center_y, sides, radius, rotation, lineThick, color);
 }
 export function DrawSplineLinear(
 	points: Pointer,
@@ -2240,7 +2261,7 @@ export function DrawSplineLinear(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineLinear(points, pointCount, thick, color);
+	symbols().kreb_DrawSplineLinear(points, pointCount, thick, color);
 }
 export function DrawSplineBasis(
 	points: Pointer,
@@ -2248,7 +2269,7 @@ export function DrawSplineBasis(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineBasis(points, pointCount, thick, color);
+	symbols().kreb_DrawSplineBasis(points, pointCount, thick, color);
 }
 export function DrawSplineCatmullRom(
 	points: Pointer,
@@ -2256,7 +2277,7 @@ export function DrawSplineCatmullRom(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineCatmullRom(points, pointCount, thick, color);
+	symbols().kreb_DrawSplineCatmullRom(points, pointCount, thick, color);
 }
 export function DrawSplineBezierQuadratic(
 	points: Pointer,
@@ -2264,7 +2285,7 @@ export function DrawSplineBezierQuadratic(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineBezierQuadratic(points, pointCount, thick, color);
+	symbols().kreb_DrawSplineBezierQuadratic(points, pointCount, thick, color);
 }
 export function DrawSplineBezierCubic(
 	points: Pointer,
@@ -2272,7 +2293,7 @@ export function DrawSplineBezierCubic(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineBezierCubic(points, pointCount, thick, color);
+	symbols().kreb_DrawSplineBezierCubic(points, pointCount, thick, color);
 }
 export function DrawSplineSegmentLinear(
 	p1_x: number,
@@ -2282,7 +2303,7 @@ export function DrawSplineSegmentLinear(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineSegmentLinear(p1_x, p1_y, p2_x, p2_y, thick, color);
+	symbols().kreb_DrawSplineSegmentLinear(p1_x, p1_y, p2_x, p2_y, thick, color);
 }
 export function DrawSplineSegmentBasis(
 	p1_x: number,
@@ -2296,7 +2317,18 @@ export function DrawSplineSegmentBasis(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineSegmentBasis(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y, thick, color);
+	symbols().kreb_DrawSplineSegmentBasis(
+		p1_x,
+		p1_y,
+		p2_x,
+		p2_y,
+		p3_x,
+		p3_y,
+		p4_x,
+		p4_y,
+		thick,
+		color,
+	);
 }
 export function DrawSplineSegmentCatmullRom(
 	p1_x: number,
@@ -2310,7 +2342,7 @@ export function DrawSplineSegmentCatmullRom(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineSegmentCatmullRom(
+	symbols().kreb_DrawSplineSegmentCatmullRom(
 		p1_x,
 		p1_y,
 		p2_x,
@@ -2333,7 +2365,7 @@ export function DrawSplineSegmentBezierQuadratic(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineSegmentBezierQuadratic(p1_x, p1_y, c2_x, c2_y, p3_x, p3_y, thick, color);
+	symbols().kreb_DrawSplineSegmentBezierQuadratic(p1_x, p1_y, c2_x, c2_y, p3_x, p3_y, thick, color);
 }
 export function DrawSplineSegmentBezierCubic(
 	p1_x: number,
@@ -2347,7 +2379,7 @@ export function DrawSplineSegmentBezierCubic(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSplineSegmentBezierCubic(
+	symbols().kreb_DrawSplineSegmentBezierCubic(
 		p1_x,
 		p1_y,
 		c2_x,
@@ -2367,7 +2399,7 @@ export function GetSplinePointLinear(
 	endPos_y: number,
 	t: number,
 ): Float32Array {
-	symbols.kreb_GetSplinePointLinear(startPos_x, startPos_y, endPos_x, endPos_y, t, scratchPtr);
+	symbols().kreb_GetSplinePointLinear(startPos_x, startPos_y, endPos_x, endPos_y, t, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetSplinePointBasis(
@@ -2381,7 +2413,7 @@ export function GetSplinePointBasis(
 	p4_y: number,
 	t: number,
 ): Float32Array {
-	symbols.kreb_GetSplinePointBasis(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y, t, scratchPtr);
+	symbols().kreb_GetSplinePointBasis(p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y, t, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetSplinePointCatmullRom(
@@ -2395,7 +2427,7 @@ export function GetSplinePointCatmullRom(
 	p4_y: number,
 	t: number,
 ): Float32Array {
-	symbols.kreb_GetSplinePointCatmullRom(
+	symbols().kreb_GetSplinePointCatmullRom(
 		p1_x,
 		p1_y,
 		p2_x,
@@ -2418,7 +2450,7 @@ export function GetSplinePointBezierQuad(
 	p3_y: number,
 	t: number,
 ): Float32Array {
-	symbols.kreb_GetSplinePointBezierQuad(p1_x, p1_y, c2_x, c2_y, p3_x, p3_y, t, scratchPtr);
+	symbols().kreb_GetSplinePointBezierQuad(p1_x, p1_y, c2_x, c2_y, p3_x, p3_y, t, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetSplinePointBezierCubic(
@@ -2432,7 +2464,7 @@ export function GetSplinePointBezierCubic(
 	p4_y: number,
 	t: number,
 ): Float32Array {
-	symbols.kreb_GetSplinePointBezierCubic(
+	symbols().kreb_GetSplinePointBezierCubic(
 		p1_x,
 		p1_y,
 		c2_x,
@@ -2457,7 +2489,7 @@ export function CheckCollisionRecs(
 	rec2_height: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionRecs(
+		symbols().kreb_CheckCollisionRecs(
 			rec1_x,
 			rec1_y,
 			rec1_width,
@@ -2478,7 +2510,7 @@ export function CheckCollisionCircles(
 	radius2: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionCircles(
+		symbols().kreb_CheckCollisionCircles(
 			center1_x,
 			center1_y,
 			radius1,
@@ -2498,7 +2530,7 @@ export function CheckCollisionCircleRec(
 	rec_height: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionCircleRec(
+		symbols().kreb_CheckCollisionCircleRec(
 			center_x,
 			center_y,
 			radius,
@@ -2519,7 +2551,8 @@ export function CheckCollisionCircleLine(
 	p2_y: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionCircleLine(center_x, center_y, radius, p1_x, p1_y, p2_x, p2_y) === 1
+		symbols().kreb_CheckCollisionCircleLine(center_x, center_y, radius, p1_x, p1_y, p2_x, p2_y) ===
+		1
 	);
 }
 export function CheckCollisionPointRec(
@@ -2531,7 +2564,8 @@ export function CheckCollisionPointRec(
 	rec_height: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionPointRec(point_x, point_y, rec_x, rec_y, rec_width, rec_height) === 1
+		symbols().kreb_CheckCollisionPointRec(point_x, point_y, rec_x, rec_y, rec_width, rec_height) ===
+		1
 	);
 }
 export function CheckCollisionPointCircle(
@@ -2541,7 +2575,9 @@ export function CheckCollisionPointCircle(
 	center_y: number,
 	radius: number,
 ): boolean {
-	return symbols.kreb_CheckCollisionPointCircle(point_x, point_y, center_x, center_y, radius) === 1;
+	return (
+		symbols().kreb_CheckCollisionPointCircle(point_x, point_y, center_x, center_y, radius) === 1
+	);
 }
 export function CheckCollisionPointTriangle(
 	point_x: number,
@@ -2554,7 +2590,7 @@ export function CheckCollisionPointTriangle(
 	p3_y: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionPointTriangle(
+		symbols().kreb_CheckCollisionPointTriangle(
 			point_x,
 			point_y,
 			p1_x,
@@ -2576,7 +2612,8 @@ export function CheckCollisionPointLine(
 	threshold: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionPointLine(point_x, point_y, p1_x, p1_y, p2_x, p2_y, threshold) === 1
+		symbols().kreb_CheckCollisionPointLine(point_x, point_y, p1_x, p1_y, p2_x, p2_y, threshold) ===
+		1
 	);
 }
 export function CheckCollisionPointPoly(
@@ -2585,7 +2622,7 @@ export function CheckCollisionPointPoly(
 	points: Pointer,
 	pointCount: number,
 ): boolean {
-	return symbols.kreb_CheckCollisionPointPoly(point_x, point_y, points, pointCount) === 1;
+	return symbols().kreb_CheckCollisionPointPoly(point_x, point_y, points, pointCount) === 1;
 }
 export function CheckCollisionLines(
 	startPos1_x: number,
@@ -2599,7 +2636,7 @@ export function CheckCollisionLines(
 	collisionPoint: Pointer,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionLines(
+		symbols().kreb_CheckCollisionLines(
 			startPos1_x,
 			startPos1_y,
 			endPos1_x,
@@ -2622,7 +2659,7 @@ export function GetCollisionRec(
 	rec2_width: number,
 	rec2_height: number,
 ): Float32Array {
-	symbols.kreb_GetCollisionRec(
+	symbols().kreb_GetCollisionRec(
 		rec1_x,
 		rec1_y,
 		rec1_width,
@@ -2636,7 +2673,7 @@ export function GetCollisionRec(
 	return scratch.slice(0, 4);
 }
 export function LoadImage(fileName: string): Pointer | null {
-	return symbols.kreb_LoadImage(cstring(fileName));
+	return symbols().kreb_LoadImage(cstring(fileName));
 }
 export function LoadImageRaw(
 	fileName: string,
@@ -2645,10 +2682,10 @@ export function LoadImageRaw(
 	format: number,
 	headerSize: number,
 ): Pointer | null {
-	return symbols.kreb_LoadImageRaw(cstring(fileName), width, height, format, headerSize);
+	return symbols().kreb_LoadImageRaw(cstring(fileName), width, height, format, headerSize);
 }
 export function LoadImageAnim(fileName: string, frames: Pointer): Pointer | null {
-	return symbols.kreb_LoadImageAnim(cstring(fileName), frames);
+	return symbols().kreb_LoadImageAnim(cstring(fileName), frames);
 }
 export function LoadImageAnimFromMemory(
 	fileType: string,
@@ -2656,42 +2693,42 @@ export function LoadImageAnimFromMemory(
 	dataSize: number,
 	frames: Pointer,
 ): Pointer | null {
-	return symbols.kreb_LoadImageAnimFromMemory(cstring(fileType), fileData, dataSize, frames);
+	return symbols().kreb_LoadImageAnimFromMemory(cstring(fileType), fileData, dataSize, frames);
 }
 export function LoadImageFromMemory(
 	fileType: string,
 	fileData: Pointer,
 	dataSize: number,
 ): Pointer | null {
-	return symbols.kreb_LoadImageFromMemory(cstring(fileType), fileData, dataSize);
+	return symbols().kreb_LoadImageFromMemory(cstring(fileType), fileData, dataSize);
 }
 export function LoadImageFromTexture(texture: Pointer): Pointer | null {
-	return symbols.kreb_LoadImageFromTexture(texture);
+	return symbols().kreb_LoadImageFromTexture(texture);
 }
 export function LoadImageFromScreen(): Pointer | null {
-	return symbols.kreb_LoadImageFromScreen();
+	return symbols().kreb_LoadImageFromScreen();
 }
 export function IsImageValid(image: Pointer): boolean {
-	return symbols.kreb_IsImageValid(image) === 1;
+	return symbols().kreb_IsImageValid(image) === 1;
 }
 export function UnloadImage(image: Pointer): void {
-	symbols.kreb_UnloadImage(image);
+	symbols().kreb_UnloadImage(image);
 }
 export function ExportImage(image: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportImage(image, cstring(fileName)) === 1;
+	return symbols().kreb_ExportImage(image, cstring(fileName)) === 1;
 }
 export function ExportImageToMemory(
 	image: Pointer,
 	fileType: string,
 	fileSize: Pointer,
 ): Pointer | null {
-	return symbols.kreb_ExportImageToMemory(image, cstring(fileType), fileSize);
+	return symbols().kreb_ExportImageToMemory(image, cstring(fileType), fileSize);
 }
 export function ExportImageAsCode(image: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportImageAsCode(image, cstring(fileName)) === 1;
+	return symbols().kreb_ExportImageAsCode(image, cstring(fileName)) === 1;
 }
 export function GenImageColor(width: number, height: number, color: number): Pointer | null {
-	return symbols.kreb_GenImageColor(width, height, color);
+	return symbols().kreb_GenImageColor(width, height, color);
 }
 export function GenImageGradientLinear(
 	width: number,
@@ -2700,7 +2737,7 @@ export function GenImageGradientLinear(
 	start: number,
 	end: number,
 ): Pointer | null {
-	return symbols.kreb_GenImageGradientLinear(width, height, direction, start, end);
+	return symbols().kreb_GenImageGradientLinear(width, height, direction, start, end);
 }
 export function GenImageGradientRadial(
 	width: number,
@@ -2709,7 +2746,7 @@ export function GenImageGradientRadial(
 	inner: number,
 	outer: number,
 ): Pointer | null {
-	return symbols.kreb_GenImageGradientRadial(width, height, density, inner, outer);
+	return symbols().kreb_GenImageGradientRadial(width, height, density, inner, outer);
 }
 export function GenImageGradientSquare(
 	width: number,
@@ -2718,7 +2755,7 @@ export function GenImageGradientSquare(
 	inner: number,
 	outer: number,
 ): Pointer | null {
-	return symbols.kreb_GenImageGradientSquare(width, height, density, inner, outer);
+	return symbols().kreb_GenImageGradientSquare(width, height, density, inner, outer);
 }
 export function GenImageChecked(
 	width: number,
@@ -2728,10 +2765,10 @@ export function GenImageChecked(
 	col1: number,
 	col2: number,
 ): Pointer | null {
-	return symbols.kreb_GenImageChecked(width, height, checksX, checksY, col1, col2);
+	return symbols().kreb_GenImageChecked(width, height, checksX, checksY, col1, col2);
 }
 export function GenImageWhiteNoise(width: number, height: number, factor: number): Pointer | null {
-	return symbols.kreb_GenImageWhiteNoise(width, height, factor);
+	return symbols().kreb_GenImageWhiteNoise(width, height, factor);
 }
 export function GenImagePerlinNoise(
 	width: number,
@@ -2740,16 +2777,16 @@ export function GenImagePerlinNoise(
 	offsetY: number,
 	scale: number,
 ): Pointer | null {
-	return symbols.kreb_GenImagePerlinNoise(width, height, offsetX, offsetY, scale);
+	return symbols().kreb_GenImagePerlinNoise(width, height, offsetX, offsetY, scale);
 }
 export function GenImageCellular(width: number, height: number, tileSize: number): Pointer | null {
-	return symbols.kreb_GenImageCellular(width, height, tileSize);
+	return symbols().kreb_GenImageCellular(width, height, tileSize);
 }
 export function GenImageText(width: number, height: number, text: string): Pointer | null {
-	return symbols.kreb_GenImageText(width, height, cstring(text));
+	return symbols().kreb_GenImageText(width, height, cstring(text));
 }
 export function ImageCopy(image: Pointer): Pointer | null {
-	return symbols.kreb_ImageCopy(image);
+	return symbols().kreb_ImageCopy(image);
 }
 export function ImageFromImage(
 	image: Pointer,
@@ -2758,13 +2795,13 @@ export function ImageFromImage(
 	rec_width: number,
 	rec_height: number,
 ): Pointer | null {
-	return symbols.kreb_ImageFromImage(image, rec_x, rec_y, rec_width, rec_height);
+	return symbols().kreb_ImageFromImage(image, rec_x, rec_y, rec_width, rec_height);
 }
 export function ImageFromChannel(image: Pointer, selectedChannel: number): Pointer | null {
-	return symbols.kreb_ImageFromChannel(image, selectedChannel);
+	return symbols().kreb_ImageFromChannel(image, selectedChannel);
 }
 export function ImageText(text: string, fontSize: number, color: number): Pointer | null {
-	return symbols.kreb_ImageText(cstring(text), fontSize, color);
+	return symbols().kreb_ImageText(cstring(text), fontSize, color);
 }
 export function ImageTextEx(
 	font: Pointer,
@@ -2773,13 +2810,13 @@ export function ImageTextEx(
 	spacing: number,
 	tint: number,
 ): Pointer | null {
-	return symbols.kreb_ImageTextEx(font, cstring(text), fontSize, spacing, tint);
+	return symbols().kreb_ImageTextEx(font, cstring(text), fontSize, spacing, tint);
 }
 export function ImageFormat(image: Pointer, newFormat: number): void {
-	symbols.kreb_ImageFormat(image, newFormat);
+	symbols().kreb_ImageFormat(image, newFormat);
 }
 export function ImageToPOT(image: Pointer, fill: number): void {
-	symbols.kreb_ImageToPOT(image, fill);
+	symbols().kreb_ImageToPOT(image, fill);
 }
 export function ImageCrop(
 	image: Pointer,
@@ -2788,31 +2825,31 @@ export function ImageCrop(
 	crop_width: number,
 	crop_height: number,
 ): void {
-	symbols.kreb_ImageCrop(image, crop_x, crop_y, crop_width, crop_height);
+	symbols().kreb_ImageCrop(image, crop_x, crop_y, crop_width, crop_height);
 }
 export function ImageAlphaCrop(image: Pointer, threshold: number): void {
-	symbols.kreb_ImageAlphaCrop(image, threshold);
+	symbols().kreb_ImageAlphaCrop(image, threshold);
 }
 export function ImageAlphaClear(image: Pointer, color: number, threshold: number): void {
-	symbols.kreb_ImageAlphaClear(image, color, threshold);
+	symbols().kreb_ImageAlphaClear(image, color, threshold);
 }
 export function ImageAlphaMask(image: Pointer, alphaMask: Pointer): void {
-	symbols.kreb_ImageAlphaMask(image, alphaMask);
+	symbols().kreb_ImageAlphaMask(image, alphaMask);
 }
 export function ImageAlphaPremultiply(image: Pointer): void {
-	symbols.kreb_ImageAlphaPremultiply(image);
+	symbols().kreb_ImageAlphaPremultiply(image);
 }
 export function ImageBlurGaussian(image: Pointer, blurSize: number): void {
-	symbols.kreb_ImageBlurGaussian(image, blurSize);
+	symbols().kreb_ImageBlurGaussian(image, blurSize);
 }
 export function ImageKernelConvolution(image: Pointer, kernel: Pointer, kernelSize: number): void {
-	symbols.kreb_ImageKernelConvolution(image, kernel, kernelSize);
+	symbols().kreb_ImageKernelConvolution(image, kernel, kernelSize);
 }
 export function ImageResize(image: Pointer, newWidth: number, newHeight: number): void {
-	symbols.kreb_ImageResize(image, newWidth, newHeight);
+	symbols().kreb_ImageResize(image, newWidth, newHeight);
 }
 export function ImageResizeNN(image: Pointer, newWidth: number, newHeight: number): void {
-	symbols.kreb_ImageResizeNN(image, newWidth, newHeight);
+	symbols().kreb_ImageResizeNN(image, newWidth, newHeight);
 }
 export function ImageResizeCanvas(
 	image: Pointer,
@@ -2822,10 +2859,10 @@ export function ImageResizeCanvas(
 	offsetY: number,
 	fill: number,
 ): void {
-	symbols.kreb_ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, fill);
+	symbols().kreb_ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, fill);
 }
 export function ImageMipmaps(image: Pointer): void {
-	symbols.kreb_ImageMipmaps(image);
+	symbols().kreb_ImageMipmaps(image);
 }
 export function ImageDither(
 	image: Pointer,
@@ -2834,69 +2871,69 @@ export function ImageDither(
 	bBpp: number,
 	aBpp: number,
 ): void {
-	symbols.kreb_ImageDither(image, rBpp, gBpp, bBpp, aBpp);
+	symbols().kreb_ImageDither(image, rBpp, gBpp, bBpp, aBpp);
 }
 export function ImageFlipVertical(image: Pointer): void {
-	symbols.kreb_ImageFlipVertical(image);
+	symbols().kreb_ImageFlipVertical(image);
 }
 export function ImageFlipHorizontal(image: Pointer): void {
-	symbols.kreb_ImageFlipHorizontal(image);
+	symbols().kreb_ImageFlipHorizontal(image);
 }
 export function ImageRotate(image: Pointer, degrees: number): void {
-	symbols.kreb_ImageRotate(image, degrees);
+	symbols().kreb_ImageRotate(image, degrees);
 }
 export function ImageRotateCW(image: Pointer): void {
-	symbols.kreb_ImageRotateCW(image);
+	symbols().kreb_ImageRotateCW(image);
 }
 export function ImageRotateCCW(image: Pointer): void {
-	symbols.kreb_ImageRotateCCW(image);
+	symbols().kreb_ImageRotateCCW(image);
 }
 export function ImageColorTint(image: Pointer, color: number): void {
-	symbols.kreb_ImageColorTint(image, color);
+	symbols().kreb_ImageColorTint(image, color);
 }
 export function ImageColorInvert(image: Pointer): void {
-	symbols.kreb_ImageColorInvert(image);
+	symbols().kreb_ImageColorInvert(image);
 }
 export function ImageColorGrayscale(image: Pointer): void {
-	symbols.kreb_ImageColorGrayscale(image);
+	symbols().kreb_ImageColorGrayscale(image);
 }
 export function ImageColorContrast(image: Pointer, contrast: number): void {
-	symbols.kreb_ImageColorContrast(image, contrast);
+	symbols().kreb_ImageColorContrast(image, contrast);
 }
 export function ImageColorBrightness(image: Pointer, brightness: number): void {
-	symbols.kreb_ImageColorBrightness(image, brightness);
+	symbols().kreb_ImageColorBrightness(image, brightness);
 }
 export function ImageColorReplace(image: Pointer, color: number, replace: number): void {
-	symbols.kreb_ImageColorReplace(image, color, replace);
+	symbols().kreb_ImageColorReplace(image, color, replace);
 }
 export function LoadImageColors(image: Pointer): Pointer | null {
-	return symbols.kreb_LoadImageColors(image);
+	return symbols().kreb_LoadImageColors(image);
 }
 export function LoadImagePalette(
 	image: Pointer,
 	maxPaletteSize: number,
 	colorCount: Pointer,
 ): Pointer | null {
-	return symbols.kreb_LoadImagePalette(image, maxPaletteSize, colorCount);
+	return symbols().kreb_LoadImagePalette(image, maxPaletteSize, colorCount);
 }
 export function UnloadImageColors(colors: Pointer): void {
-	symbols.kreb_UnloadImageColors(colors);
+	symbols().kreb_UnloadImageColors(colors);
 }
 export function UnloadImagePalette(colors: Pointer): void {
-	symbols.kreb_UnloadImagePalette(colors);
+	symbols().kreb_UnloadImagePalette(colors);
 }
 export function GetImageAlphaBorder(image: Pointer, threshold: number): Float32Array {
-	symbols.kreb_GetImageAlphaBorder(image, threshold, scratchPtr);
+	symbols().kreb_GetImageAlphaBorder(image, threshold, scratchPtr);
 	return scratch.slice(0, 4);
 }
 export function GetImageColor(image: Pointer, x: number, y: number): number {
-	return symbols.kreb_GetImageColor(image, x, y);
+	return symbols().kreb_GetImageColor(image, x, y);
 }
 export function ImageClearBackground(dst: Pointer, color: number): void {
-	symbols.kreb_ImageClearBackground(dst, color);
+	symbols().kreb_ImageClearBackground(dst, color);
 }
 export function ImageDrawPixel(dst: Pointer, posX: number, posY: number, color: number): void {
-	symbols.kreb_ImageDrawPixel(dst, posX, posY, color);
+	symbols().kreb_ImageDrawPixel(dst, posX, posY, color);
 }
 export function ImageDrawPixelV(
 	dst: Pointer,
@@ -2904,7 +2941,7 @@ export function ImageDrawPixelV(
 	position_y: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawPixelV(dst, position_x, position_y, color);
+	symbols().kreb_ImageDrawPixelV(dst, position_x, position_y, color);
 }
 export function ImageDrawLine(
 	dst: Pointer,
@@ -2914,7 +2951,7 @@ export function ImageDrawLine(
 	endPosY: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawLine(dst, startPosX, startPosY, endPosX, endPosY, color);
+	symbols().kreb_ImageDrawLine(dst, startPosX, startPosY, endPosX, endPosY, color);
 }
 export function ImageDrawLineV(
 	dst: Pointer,
@@ -2924,7 +2961,7 @@ export function ImageDrawLineV(
 	end_y: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawLineV(dst, start_x, start_y, end_x, end_y, color);
+	symbols().kreb_ImageDrawLineV(dst, start_x, start_y, end_x, end_y, color);
 }
 export function ImageDrawLineEx(
 	dst: Pointer,
@@ -2935,7 +2972,7 @@ export function ImageDrawLineEx(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawLineEx(dst, start_x, start_y, end_x, end_y, thick, color);
+	symbols().kreb_ImageDrawLineEx(dst, start_x, start_y, end_x, end_y, thick, color);
 }
 export function ImageDrawCircle(
 	dst: Pointer,
@@ -2944,7 +2981,7 @@ export function ImageDrawCircle(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawCircle(dst, centerX, centerY, radius, color);
+	symbols().kreb_ImageDrawCircle(dst, centerX, centerY, radius, color);
 }
 export function ImageDrawCircleV(
 	dst: Pointer,
@@ -2953,7 +2990,7 @@ export function ImageDrawCircleV(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawCircleV(dst, center_x, center_y, radius, color);
+	symbols().kreb_ImageDrawCircleV(dst, center_x, center_y, radius, color);
 }
 export function ImageDrawCircleLines(
 	dst: Pointer,
@@ -2962,7 +2999,7 @@ export function ImageDrawCircleLines(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawCircleLines(dst, centerX, centerY, radius, color);
+	symbols().kreb_ImageDrawCircleLines(dst, centerX, centerY, radius, color);
 }
 export function ImageDrawCircleLinesV(
 	dst: Pointer,
@@ -2971,7 +3008,7 @@ export function ImageDrawCircleLinesV(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawCircleLinesV(dst, center_x, center_y, radius, color);
+	symbols().kreb_ImageDrawCircleLinesV(dst, center_x, center_y, radius, color);
 }
 export function ImageDrawRectangle(
 	dst: Pointer,
@@ -2981,7 +3018,7 @@ export function ImageDrawRectangle(
 	height: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawRectangle(dst, posX, posY, width, height, color);
+	symbols().kreb_ImageDrawRectangle(dst, posX, posY, width, height, color);
 }
 export function ImageDrawRectangleV(
 	dst: Pointer,
@@ -2991,7 +3028,7 @@ export function ImageDrawRectangleV(
 	size_y: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawRectangleV(dst, position_x, position_y, size_x, size_y, color);
+	symbols().kreb_ImageDrawRectangleV(dst, position_x, position_y, size_x, size_y, color);
 }
 export function ImageDrawRectangleRec(
 	dst: Pointer,
@@ -3001,7 +3038,7 @@ export function ImageDrawRectangleRec(
 	rec_height: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawRectangleRec(dst, rec_x, rec_y, rec_width, rec_height, color);
+	symbols().kreb_ImageDrawRectangleRec(dst, rec_x, rec_y, rec_width, rec_height, color);
 }
 export function ImageDrawRectangleLines(
 	dst: Pointer,
@@ -3012,7 +3049,7 @@ export function ImageDrawRectangleLines(
 	thick: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawRectangleLines(dst, rec_x, rec_y, rec_width, rec_height, thick, color);
+	symbols().kreb_ImageDrawRectangleLines(dst, rec_x, rec_y, rec_width, rec_height, thick, color);
 }
 export function ImageDrawTriangle(
 	dst: Pointer,
@@ -3024,7 +3061,7 @@ export function ImageDrawTriangle(
 	v3_y: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawTriangle(dst, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
+	symbols().kreb_ImageDrawTriangle(dst, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
 }
 export function ImageDrawTriangleEx(
 	dst: Pointer,
@@ -3038,7 +3075,7 @@ export function ImageDrawTriangleEx(
 	c2: number,
 	c3: number,
 ): void {
-	symbols.kreb_ImageDrawTriangleEx(dst, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, c1, c2, c3);
+	symbols().kreb_ImageDrawTriangleEx(dst, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, c1, c2, c3);
 }
 export function ImageDrawTriangleLines(
 	dst: Pointer,
@@ -3050,7 +3087,7 @@ export function ImageDrawTriangleLines(
 	v3_y: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawTriangleLines(dst, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
+	symbols().kreb_ImageDrawTriangleLines(dst, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y, color);
 }
 export function ImageDrawTriangleFan(
 	dst: Pointer,
@@ -3058,7 +3095,7 @@ export function ImageDrawTriangleFan(
 	pointCount: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawTriangleFan(dst, points, pointCount, color);
+	symbols().kreb_ImageDrawTriangleFan(dst, points, pointCount, color);
 }
 export function ImageDrawTriangleStrip(
 	dst: Pointer,
@@ -3066,7 +3103,7 @@ export function ImageDrawTriangleStrip(
 	pointCount: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawTriangleStrip(dst, points, pointCount, color);
+	symbols().kreb_ImageDrawTriangleStrip(dst, points, pointCount, color);
 }
 export function ImageDraw(
 	dst: Pointer,
@@ -3081,7 +3118,7 @@ export function ImageDraw(
 	dstRec_height: number,
 	tint: number,
 ): void {
-	symbols.kreb_ImageDraw(
+	symbols().kreb_ImageDraw(
 		dst,
 		src,
 		srcRec_x,
@@ -3103,7 +3140,7 @@ export function ImageDrawText(
 	fontSize: number,
 	color: number,
 ): void {
-	symbols.kreb_ImageDrawText(dst, cstring(text), posX, posY, fontSize, color);
+	symbols().kreb_ImageDrawText(dst, cstring(text), posX, posY, fontSize, color);
 }
 export function ImageDrawTextEx(
 	dst: Pointer,
@@ -3115,7 +3152,7 @@ export function ImageDrawTextEx(
 	spacing: number,
 	tint: number,
 ): void {
-	symbols.kreb_ImageDrawTextEx(
+	symbols().kreb_ImageDrawTextEx(
 		dst,
 		font,
 		cstring(text),
@@ -3127,31 +3164,31 @@ export function ImageDrawTextEx(
 	);
 }
 export function LoadTexture(fileName: string): Pointer | null {
-	return symbols.kreb_LoadTexture(cstring(fileName));
+	return symbols().kreb_LoadTexture(cstring(fileName));
 }
 export function LoadTextureFromImage(image: Pointer): Pointer | null {
-	return symbols.kreb_LoadTextureFromImage(image);
+	return symbols().kreb_LoadTextureFromImage(image);
 }
 export function LoadTextureCubemap(image: Pointer, layout: number): Pointer | null {
-	return symbols.kreb_LoadTextureCubemap(image, layout);
+	return symbols().kreb_LoadTextureCubemap(image, layout);
 }
 export function LoadRenderTexture(width: number, height: number): Pointer | null {
-	return symbols.kreb_LoadRenderTexture(width, height);
+	return symbols().kreb_LoadRenderTexture(width, height);
 }
 export function IsTextureValid(texture: Pointer): boolean {
-	return symbols.kreb_IsTextureValid(texture) === 1;
+	return symbols().kreb_IsTextureValid(texture) === 1;
 }
 export function UnloadTexture(texture: Pointer): void {
-	symbols.kreb_UnloadTexture(texture);
+	symbols().kreb_UnloadTexture(texture);
 }
 export function IsRenderTextureValid(target: Pointer): boolean {
-	return symbols.kreb_IsRenderTextureValid(target) === 1;
+	return symbols().kreb_IsRenderTextureValid(target) === 1;
 }
 export function UnloadRenderTexture(target: Pointer): void {
-	symbols.kreb_UnloadRenderTexture(target);
+	symbols().kreb_UnloadRenderTexture(target);
 }
 export function UpdateTexture(texture: Pointer, pixels: Pointer): void {
-	symbols.kreb_UpdateTexture(texture, pixels);
+	symbols().kreb_UpdateTexture(texture, pixels);
 }
 export function UpdateTextureRec(
 	texture: Pointer,
@@ -3161,19 +3198,19 @@ export function UpdateTextureRec(
 	rec_height: number,
 	pixels: Pointer,
 ): void {
-	symbols.kreb_UpdateTextureRec(texture, rec_x, rec_y, rec_width, rec_height, pixels);
+	symbols().kreb_UpdateTextureRec(texture, rec_x, rec_y, rec_width, rec_height, pixels);
 }
 export function GenTextureMipmaps(texture: Pointer): void {
-	symbols.kreb_GenTextureMipmaps(texture);
+	symbols().kreb_GenTextureMipmaps(texture);
 }
 export function SetTextureFilter(texture: Pointer, filter: number): void {
-	symbols.kreb_SetTextureFilter(texture, filter);
+	symbols().kreb_SetTextureFilter(texture, filter);
 }
 export function SetTextureWrap(texture: Pointer, wrap: number): void {
-	symbols.kreb_SetTextureWrap(texture, wrap);
+	symbols().kreb_SetTextureWrap(texture, wrap);
 }
 export function DrawTexture(texture: Pointer, posX: number, posY: number, tint: number): void {
-	symbols.kreb_DrawTexture(texture, posX, posY, tint);
+	symbols().kreb_DrawTexture(texture, posX, posY, tint);
 }
 export function DrawTextureV(
 	texture: Pointer,
@@ -3181,7 +3218,7 @@ export function DrawTextureV(
 	position_y: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextureV(texture, position_x, position_y, tint);
+	symbols().kreb_DrawTextureV(texture, position_x, position_y, tint);
 }
 export function DrawTextureEx(
 	texture: Pointer,
@@ -3191,7 +3228,7 @@ export function DrawTextureEx(
 	scale: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextureEx(texture, position_x, position_y, rotation, scale, tint);
+	symbols().kreb_DrawTextureEx(texture, position_x, position_y, rotation, scale, tint);
 }
 export function DrawTextureRec(
 	texture: Pointer,
@@ -3203,7 +3240,7 @@ export function DrawTextureRec(
 	position_y: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextureRec(
+	symbols().kreb_DrawTextureRec(
 		texture,
 		source_x,
 		source_y,
@@ -3229,7 +3266,7 @@ export function DrawTexturePro(
 	rotation: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTexturePro(
+	symbols().kreb_DrawTexturePro(
 		texture,
 		source_x,
 		source_y,
@@ -3257,7 +3294,7 @@ export function DrawTextureNPatch(
 	rotation: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextureNPatch(
+	symbols().kreb_DrawTextureNPatch(
 		texture,
 		nPatchInfo,
 		dest_x,
@@ -3271,16 +3308,16 @@ export function DrawTextureNPatch(
 	);
 }
 export function ColorIsEqual(col1: number, col2: number): boolean {
-	return symbols.kreb_ColorIsEqual(col1, col2) === 1;
+	return symbols().kreb_ColorIsEqual(col1, col2) === 1;
 }
 export function Fade(color: number, alpha: number): number {
-	return symbols.kreb_Fade(color, alpha);
+	return symbols().kreb_Fade(color, alpha);
 }
 export function ColorToInt(color: number): number {
-	return symbols.kreb_ColorToInt(color);
+	return symbols().kreb_ColorToInt(color);
 }
 export function ColorNormalize(color: number): Float32Array {
-	symbols.kreb_ColorNormalize(color, scratchPtr);
+	symbols().kreb_ColorNormalize(color, scratchPtr);
 	return scratch.slice(0, 4);
 }
 export function ColorFromNormalized(
@@ -3289,50 +3326,50 @@ export function ColorFromNormalized(
 	normalized_z: number,
 	normalized_w: number,
 ): number {
-	return symbols.kreb_ColorFromNormalized(normalized_x, normalized_y, normalized_z, normalized_w);
+	return symbols().kreb_ColorFromNormalized(normalized_x, normalized_y, normalized_z, normalized_w);
 }
 export function ColorToHSV(color: number): Float32Array {
-	symbols.kreb_ColorToHSV(color, scratchPtr);
+	symbols().kreb_ColorToHSV(color, scratchPtr);
 	return scratch.slice(0, 3);
 }
 export function ColorFromHSV(hue: number, saturation: number, value: number): number {
-	return symbols.kreb_ColorFromHSV(hue, saturation, value);
+	return symbols().kreb_ColorFromHSV(hue, saturation, value);
 }
 export function ColorTint(color: number, tint: number): number {
-	return symbols.kreb_ColorTint(color, tint);
+	return symbols().kreb_ColorTint(color, tint);
 }
 export function ColorBrightness(color: number, factor: number): number {
-	return symbols.kreb_ColorBrightness(color, factor);
+	return symbols().kreb_ColorBrightness(color, factor);
 }
 export function ColorContrast(color: number, contrast: number): number {
-	return symbols.kreb_ColorContrast(color, contrast);
+	return symbols().kreb_ColorContrast(color, contrast);
 }
 export function ColorAlpha(color: number, alpha: number): number {
-	return symbols.kreb_ColorAlpha(color, alpha);
+	return symbols().kreb_ColorAlpha(color, alpha);
 }
 export function ColorAlphaBlend(dst: number, src: number, tint: number): number {
-	return symbols.kreb_ColorAlphaBlend(dst, src, tint);
+	return symbols().kreb_ColorAlphaBlend(dst, src, tint);
 }
 export function ColorLerp(color1: number, color2: number, factor: number): number {
-	return symbols.kreb_ColorLerp(color1, color2, factor);
+	return symbols().kreb_ColorLerp(color1, color2, factor);
 }
 export function GetColor(hexValue: number): number {
-	return symbols.kreb_GetColor(hexValue);
+	return symbols().kreb_GetColor(hexValue);
 }
 export function GetPixelColor(srcPtr: Pointer, format: number): number {
-	return symbols.kreb_GetPixelColor(srcPtr, format);
+	return symbols().kreb_GetPixelColor(srcPtr, format);
 }
 export function SetPixelColor(dstPtr: Pointer, color: number, format: number): void {
-	symbols.kreb_SetPixelColor(dstPtr, color, format);
+	symbols().kreb_SetPixelColor(dstPtr, color, format);
 }
 export function GetPixelDataSize(width: number, height: number, format: number): number {
-	return symbols.kreb_GetPixelDataSize(width, height, format);
+	return symbols().kreb_GetPixelDataSize(width, height, format);
 }
 export function GetFontDefault(): Pointer | null {
-	return symbols.kreb_GetFontDefault();
+	return symbols().kreb_GetFontDefault();
 }
 export function LoadFont(fileName: string): Pointer | null {
-	return symbols.kreb_LoadFont(cstring(fileName));
+	return symbols().kreb_LoadFont(cstring(fileName));
 }
 export function LoadFontEx(
 	fileName: string,
@@ -3340,10 +3377,10 @@ export function LoadFontEx(
 	codepoints: Pointer,
 	codepointCount: number,
 ): Pointer | null {
-	return symbols.kreb_LoadFontEx(cstring(fileName), fontSize, codepoints, codepointCount);
+	return symbols().kreb_LoadFontEx(cstring(fileName), fontSize, codepoints, codepointCount);
 }
 export function LoadFontFromImage(image: Pointer, key: number, firstChar: number): Pointer | null {
-	return symbols.kreb_LoadFontFromImage(image, key, firstChar);
+	return symbols().kreb_LoadFontFromImage(image, key, firstChar);
 }
 export function LoadFontFromMemory(
 	fileType: string,
@@ -3353,7 +3390,7 @@ export function LoadFontFromMemory(
 	codepoints: Pointer,
 	codepointCount: number,
 ): Pointer | null {
-	return symbols.kreb_LoadFontFromMemory(
+	return symbols().kreb_LoadFontFromMemory(
 		cstring(fileType),
 		fileData,
 		dataSize,
@@ -3363,7 +3400,7 @@ export function LoadFontFromMemory(
 	);
 }
 export function IsFontValid(font: Pointer): boolean {
-	return symbols.kreb_IsFontValid(font) === 1;
+	return symbols().kreb_IsFontValid(font) === 1;
 }
 export function LoadFontData(
 	fileData: Pointer,
@@ -3374,7 +3411,7 @@ export function LoadFontData(
 	type: number,
 	glyphCount: Pointer,
 ): Pointer | null {
-	return symbols.kreb_LoadFontData(
+	return symbols().kreb_LoadFontData(
 		fileData,
 		dataSize,
 		fontSize,
@@ -3392,7 +3429,7 @@ export function GenImageFontAtlas(
 	padding: number,
 	packMethod: number,
 ): Pointer | null {
-	return symbols.kreb_GenImageFontAtlas(
+	return symbols().kreb_GenImageFontAtlas(
 		glyphs,
 		glyphRecs,
 		glyphCount,
@@ -3402,16 +3439,16 @@ export function GenImageFontAtlas(
 	);
 }
 export function UnloadFontData(glyphs: Pointer, glyphCount: number): void {
-	symbols.kreb_UnloadFontData(glyphs, glyphCount);
+	symbols().kreb_UnloadFontData(glyphs, glyphCount);
 }
 export function UnloadFont(font: Pointer): void {
-	symbols.kreb_UnloadFont(font);
+	symbols().kreb_UnloadFont(font);
 }
 export function ExportFontAsCode(font: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportFontAsCode(font, cstring(fileName)) === 1;
+	return symbols().kreb_ExportFontAsCode(font, cstring(fileName)) === 1;
 }
 export function DrawFPS(posX: number, posY: number): void {
-	symbols.kreb_DrawFPS(posX, posY);
+	symbols().kreb_DrawFPS(posX, posY);
 }
 export function DrawText(
 	text: string,
@@ -3420,7 +3457,7 @@ export function DrawText(
 	fontSize: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawText(cstring(text), posX, posY, fontSize, color);
+	symbols().kreb_DrawText(cstring(text), posX, posY, fontSize, color);
 }
 export function DrawTextEx(
 	font: Pointer,
@@ -3431,7 +3468,7 @@ export function DrawTextEx(
 	spacing: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextEx(font, cstring(text), position_x, position_y, fontSize, spacing, tint);
+	symbols().kreb_DrawTextEx(font, cstring(text), position_x, position_y, fontSize, spacing, tint);
 }
 export function DrawTextPro(
 	font: Pointer,
@@ -3445,7 +3482,7 @@ export function DrawTextPro(
 	spacing: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextPro(
+	symbols().kreb_DrawTextPro(
 		font,
 		cstring(text),
 		position_x,
@@ -3466,7 +3503,7 @@ export function DrawTextCodepoint(
 	fontSize: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextCodepoint(font, codepoint, position_x, position_y, fontSize, tint);
+	symbols().kreb_DrawTextCodepoint(font, codepoint, position_x, position_y, fontSize, tint);
 }
 export function DrawTextCodepoints(
 	font: Pointer,
@@ -3478,7 +3515,7 @@ export function DrawTextCodepoints(
 	spacing: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawTextCodepoints(
+	symbols().kreb_DrawTextCodepoints(
 		font,
 		codepoints,
 		codepointCount,
@@ -3490,10 +3527,10 @@ export function DrawTextCodepoints(
 	);
 }
 export function SetTextLineSpacing(spacing: number): void {
-	symbols.kreb_SetTextLineSpacing(spacing);
+	symbols().kreb_SetTextLineSpacing(spacing);
 }
 export function MeasureText(text: string, fontSize: number): number {
-	return symbols.kreb_MeasureText(cstring(text), fontSize);
+	return symbols().kreb_MeasureText(cstring(text), fontSize);
 }
 export function MeasureTextEx(
 	font: Pointer,
@@ -3501,7 +3538,7 @@ export function MeasureTextEx(
 	fontSize: number,
 	spacing: number,
 ): Float32Array {
-	symbols.kreb_MeasureTextEx(font, cstring(text), fontSize, spacing, scratchPtr);
+	symbols().kreb_MeasureTextEx(font, cstring(text), fontSize, spacing, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function MeasureTextCodepoints(
@@ -3511,79 +3548,79 @@ export function MeasureTextCodepoints(
 	fontSize: number,
 	spacing: number,
 ): Float32Array {
-	symbols.kreb_MeasureTextCodepoints(font, codepoints, length, fontSize, spacing, scratchPtr);
+	symbols().kreb_MeasureTextCodepoints(font, codepoints, length, fontSize, spacing, scratchPtr);
 	return scratch.slice(0, 2);
 }
 export function GetGlyphIndex(font: Pointer, codepoint: number): number {
-	return symbols.kreb_GetGlyphIndex(font, codepoint);
+	return symbols().kreb_GetGlyphIndex(font, codepoint);
 }
 export function GetGlyphInfo(font: Pointer, codepoint: number): Pointer | null {
-	return symbols.kreb_GetGlyphInfo(font, codepoint);
+	return symbols().kreb_GetGlyphInfo(font, codepoint);
 }
 export function GetGlyphAtlasRec(font: Pointer, codepoint: number): Float32Array {
-	symbols.kreb_GetGlyphAtlasRec(font, codepoint, scratchPtr);
+	symbols().kreb_GetGlyphAtlasRec(font, codepoint, scratchPtr);
 	return scratch.slice(0, 4);
 }
 export function LoadUTF8(codepoints: Pointer, length: number): Pointer | null {
-	return symbols.kreb_LoadUTF8(codepoints, length);
+	return symbols().kreb_LoadUTF8(codepoints, length);
 }
 export function UnloadUTF8(text: Pointer): void {
-	symbols.kreb_UnloadUTF8(text);
+	symbols().kreb_UnloadUTF8(text);
 }
 export function LoadCodepoints(text: string, count: Pointer): Pointer | null {
-	return symbols.kreb_LoadCodepoints(cstring(text), count);
+	return symbols().kreb_LoadCodepoints(cstring(text), count);
 }
 export function UnloadCodepoints(codepoints: Pointer): void {
-	symbols.kreb_UnloadCodepoints(codepoints);
+	symbols().kreb_UnloadCodepoints(codepoints);
 }
 export function GetCodepointCount(text: string): number {
-	return symbols.kreb_GetCodepointCount(cstring(text));
+	return symbols().kreb_GetCodepointCount(cstring(text));
 }
 export function GetCodepoint(text: string, codepointSize: Pointer): number {
-	return symbols.kreb_GetCodepoint(cstring(text), codepointSize);
+	return symbols().kreb_GetCodepoint(cstring(text), codepointSize);
 }
 export function GetCodepointNext(text: string, codepointSize: Pointer): number {
-	return symbols.kreb_GetCodepointNext(cstring(text), codepointSize);
+	return symbols().kreb_GetCodepointNext(cstring(text), codepointSize);
 }
 export function GetCodepointPrevious(text: string, codepointSize: Pointer): number {
-	return symbols.kreb_GetCodepointPrevious(cstring(text), codepointSize);
+	return symbols().kreb_GetCodepointPrevious(cstring(text), codepointSize);
 }
 export function CodepointToUTF8(codepoint: number, utf8Size: Pointer): string {
-	return readCString(symbols.kreb_CodepointToUTF8(codepoint, utf8Size));
+	return readCString(symbols().kreb_CodepointToUTF8(codepoint, utf8Size));
 }
 export function LoadTextLines(text: string, count: Pointer): Pointer | null {
-	return symbols.kreb_LoadTextLines(cstring(text), count);
+	return symbols().kreb_LoadTextLines(cstring(text), count);
 }
 export function UnloadTextLines(text: Pointer, lineCount: number): void {
-	symbols.kreb_UnloadTextLines(text, lineCount);
+	symbols().kreb_UnloadTextLines(text, lineCount);
 }
 export function TextCopy(dst: Pointer, src: string): number {
-	return symbols.kreb_TextCopy(dst, cstring(src));
+	return symbols().kreb_TextCopy(dst, cstring(src));
 }
 export function TextIsEqual(text1: string, text2: string): boolean {
-	return symbols.kreb_TextIsEqual(cstring(text1), cstring(text2)) === 1;
+	return symbols().kreb_TextIsEqual(cstring(text1), cstring(text2)) === 1;
 }
 export function TextLength(text: string): number {
-	return symbols.kreb_TextLength(cstring(text));
+	return symbols().kreb_TextLength(cstring(text));
 }
 export function TextSubtext(text: string, position: number, length: number): string {
-	return readCString(symbols.kreb_TextSubtext(cstring(text), position, length));
+	return readCString(symbols().kreb_TextSubtext(cstring(text), position, length));
 }
 export function TextRemoveSpaces(text: string): string {
-	return readCString(symbols.kreb_TextRemoveSpaces(cstring(text)));
+	return readCString(symbols().kreb_TextRemoveSpaces(cstring(text)));
 }
 export function GetTextBetween(text: string, begin: string, end: string): Pointer | null {
-	return symbols.kreb_GetTextBetween(cstring(text), cstring(begin), cstring(end));
+	return symbols().kreb_GetTextBetween(cstring(text), cstring(begin), cstring(end));
 }
 export function TextReplace(text: string, search: string, replacement: string): Pointer | null {
-	return symbols.kreb_TextReplace(cstring(text), cstring(search), cstring(replacement));
+	return symbols().kreb_TextReplace(cstring(text), cstring(search), cstring(replacement));
 }
 export function TextReplaceAlloc(
 	text: string,
 	search: string,
 	replacement: string,
 ): Pointer | null {
-	return symbols.kreb_TextReplaceAlloc(cstring(text), cstring(search), cstring(replacement));
+	return symbols().kreb_TextReplaceAlloc(cstring(text), cstring(search), cstring(replacement));
 }
 export function TextReplaceBetween(
 	text: string,
@@ -3591,7 +3628,7 @@ export function TextReplaceBetween(
 	end: string,
 	replacement: string,
 ): Pointer | null {
-	return symbols.kreb_TextReplaceBetween(
+	return symbols().kreb_TextReplaceBetween(
 		cstring(text),
 		cstring(begin),
 		cstring(end),
@@ -3604,7 +3641,7 @@ export function TextReplaceBetweenAlloc(
 	end: string,
 	replacement: string,
 ): Pointer | null {
-	return symbols.kreb_TextReplaceBetweenAlloc(
+	return symbols().kreb_TextReplaceBetweenAlloc(
 		cstring(text),
 		cstring(begin),
 		cstring(end),
@@ -3612,43 +3649,43 @@ export function TextReplaceBetweenAlloc(
 	);
 }
 export function TextInsert(text: string, insert: string, position: number): Pointer | null {
-	return symbols.kreb_TextInsert(cstring(text), cstring(insert), position);
+	return symbols().kreb_TextInsert(cstring(text), cstring(insert), position);
 }
 export function TextInsertAlloc(text: string, insert: string, position: number): Pointer | null {
-	return symbols.kreb_TextInsertAlloc(cstring(text), cstring(insert), position);
+	return symbols().kreb_TextInsertAlloc(cstring(text), cstring(insert), position);
 }
 export function TextJoin(textList: Pointer, count: number, delimiter: string): Pointer | null {
-	return symbols.kreb_TextJoin(textList, count, cstring(delimiter));
+	return symbols().kreb_TextJoin(textList, count, cstring(delimiter));
 }
 export function TextSplit(text: string, delimiter: number, count: Pointer): Pointer | null {
-	return symbols.kreb_TextSplit(cstring(text), delimiter, count);
+	return symbols().kreb_TextSplit(cstring(text), delimiter, count);
 }
 export function TextAppend(text: Pointer, append: string, position: Pointer): void {
-	symbols.kreb_TextAppend(text, cstring(append), position);
+	symbols().kreb_TextAppend(text, cstring(append), position);
 }
 export function TextFindIndex(text: string, search: string): number {
-	return symbols.kreb_TextFindIndex(cstring(text), cstring(search));
+	return symbols().kreb_TextFindIndex(cstring(text), cstring(search));
 }
 export function TextToUpper(text: string): Pointer | null {
-	return symbols.kreb_TextToUpper(cstring(text));
+	return symbols().kreb_TextToUpper(cstring(text));
 }
 export function TextToLower(text: string): Pointer | null {
-	return symbols.kreb_TextToLower(cstring(text));
+	return symbols().kreb_TextToLower(cstring(text));
 }
 export function TextToPascal(text: string): Pointer | null {
-	return symbols.kreb_TextToPascal(cstring(text));
+	return symbols().kreb_TextToPascal(cstring(text));
 }
 export function TextToSnake(text: string): Pointer | null {
-	return symbols.kreb_TextToSnake(cstring(text));
+	return symbols().kreb_TextToSnake(cstring(text));
 }
 export function TextToCamel(text: string): Pointer | null {
-	return symbols.kreb_TextToCamel(cstring(text));
+	return symbols().kreb_TextToCamel(cstring(text));
 }
 export function TextToInteger(text: string): number {
-	return symbols.kreb_TextToInteger(cstring(text));
+	return symbols().kreb_TextToInteger(cstring(text));
 }
 export function TextToFloat(text: string): number {
-	return symbols.kreb_TextToFloat(cstring(text));
+	return symbols().kreb_TextToFloat(cstring(text));
 }
 export function DrawLine3D(
 	startPos_x: number,
@@ -3659,7 +3696,15 @@ export function DrawLine3D(
 	endPos_z: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawLine3D(startPos_x, startPos_y, startPos_z, endPos_x, endPos_y, endPos_z, color);
+	symbols().kreb_DrawLine3D(
+		startPos_x,
+		startPos_y,
+		startPos_z,
+		endPos_x,
+		endPos_y,
+		endPos_z,
+		color,
+	);
 }
 export function DrawPoint3D(
 	position_x: number,
@@ -3667,7 +3712,7 @@ export function DrawPoint3D(
 	position_z: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawPoint3D(position_x, position_y, position_z, color);
+	symbols().kreb_DrawPoint3D(position_x, position_y, position_z, color);
 }
 export function DrawCircle3D(
 	center_x: number,
@@ -3680,7 +3725,7 @@ export function DrawCircle3D(
 	rotationAngle: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCircle3D(
+	symbols().kreb_DrawCircle3D(
 		center_x,
 		center_y,
 		center_z,
@@ -3704,10 +3749,10 @@ export function DrawTriangle3D(
 	v3_z: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawTriangle3D(v1_x, v1_y, v1_z, v2_x, v2_y, v2_z, v3_x, v3_y, v3_z, color);
+	symbols().kreb_DrawTriangle3D(v1_x, v1_y, v1_z, v2_x, v2_y, v2_z, v3_x, v3_y, v3_z, color);
 }
 export function DrawTriangleStrip3D(points: Pointer, pointCount: number, color: number): void {
-	symbols.kreb_DrawTriangleStrip3D(points, pointCount, color);
+	symbols().kreb_DrawTriangleStrip3D(points, pointCount, color);
 }
 export function DrawCube(
 	position_x: number,
@@ -3718,7 +3763,7 @@ export function DrawCube(
 	length: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCube(position_x, position_y, position_z, width, height, length, color);
+	symbols().kreb_DrawCube(position_x, position_y, position_z, width, height, length, color);
 }
 export function DrawCubeV(
 	position_x: number,
@@ -3729,7 +3774,7 @@ export function DrawCubeV(
 	size_z: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCubeV(position_x, position_y, position_z, size_x, size_y, size_z, color);
+	symbols().kreb_DrawCubeV(position_x, position_y, position_z, size_x, size_y, size_z, color);
 }
 export function DrawCubeWires(
 	position_x: number,
@@ -3740,7 +3785,7 @@ export function DrawCubeWires(
 	length: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCubeWires(position_x, position_y, position_z, width, height, length, color);
+	symbols().kreb_DrawCubeWires(position_x, position_y, position_z, width, height, length, color);
 }
 export function DrawCubeWiresV(
 	position_x: number,
@@ -3751,7 +3796,7 @@ export function DrawCubeWiresV(
 	size_z: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCubeWiresV(position_x, position_y, position_z, size_x, size_y, size_z, color);
+	symbols().kreb_DrawCubeWiresV(position_x, position_y, position_z, size_x, size_y, size_z, color);
 }
 export function DrawSphere(
 	centerPos_x: number,
@@ -3760,7 +3805,7 @@ export function DrawSphere(
 	radius: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSphere(centerPos_x, centerPos_y, centerPos_z, radius, color);
+	symbols().kreb_DrawSphere(centerPos_x, centerPos_y, centerPos_z, radius, color);
 }
 export function DrawSphereEx(
 	centerPos_x: number,
@@ -3771,7 +3816,7 @@ export function DrawSphereEx(
 	slices: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSphereEx(centerPos_x, centerPos_y, centerPos_z, radius, rings, slices, color);
+	symbols().kreb_DrawSphereEx(centerPos_x, centerPos_y, centerPos_z, radius, rings, slices, color);
 }
 export function DrawSphereWires(
 	centerPos_x: number,
@@ -3782,7 +3827,15 @@ export function DrawSphereWires(
 	slices: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawSphereWires(centerPos_x, centerPos_y, centerPos_z, radius, rings, slices, color);
+	symbols().kreb_DrawSphereWires(
+		centerPos_x,
+		centerPos_y,
+		centerPos_z,
+		radius,
+		rings,
+		slices,
+		color,
+	);
 }
 export function DrawCylinder(
 	position_x: number,
@@ -3794,7 +3847,7 @@ export function DrawCylinder(
 	slices: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCylinder(
+	symbols().kreb_DrawCylinder(
 		position_x,
 		position_y,
 		position_z,
@@ -3817,7 +3870,7 @@ export function DrawCylinderEx(
 	sides: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCylinderEx(
+	symbols().kreb_DrawCylinderEx(
 		startPos_x,
 		startPos_y,
 		startPos_z,
@@ -3840,7 +3893,7 @@ export function DrawCylinderWires(
 	slices: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCylinderWires(
+	symbols().kreb_DrawCylinderWires(
 		position_x,
 		position_y,
 		position_z,
@@ -3863,7 +3916,7 @@ export function DrawCylinderWiresEx(
 	sides: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCylinderWiresEx(
+	symbols().kreb_DrawCylinderWiresEx(
 		startPos_x,
 		startPos_y,
 		startPos_z,
@@ -3888,7 +3941,7 @@ export function DrawCapsule(
 	rings: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCapsule(
+	symbols().kreb_DrawCapsule(
 		startPos_x,
 		startPos_y,
 		startPos_z,
@@ -3913,7 +3966,7 @@ export function DrawCapsuleWires(
 	rings: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawCapsuleWires(
+	symbols().kreb_DrawCapsuleWires(
 		startPos_x,
 		startPos_y,
 		startPos_z,
@@ -3934,7 +3987,7 @@ export function DrawPlane(
 	size_y: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawPlane(centerPos_x, centerPos_y, centerPos_z, size_x, size_y, color);
+	symbols().kreb_DrawPlane(centerPos_x, centerPos_y, centerPos_z, size_x, size_y, color);
 }
 export function DrawRay(
 	ray_position_x: number,
@@ -3945,7 +3998,7 @@ export function DrawRay(
 	ray_direction_z: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawRay(
+	symbols().kreb_DrawRay(
 		ray_position_x,
 		ray_position_y,
 		ray_position_z,
@@ -3956,22 +4009,22 @@ export function DrawRay(
 	);
 }
 export function DrawGrid(slices: number, spacing: number): void {
-	symbols.kreb_DrawGrid(slices, spacing);
+	symbols().kreb_DrawGrid(slices, spacing);
 }
 export function LoadModel(fileName: string): Pointer | null {
-	return symbols.kreb_LoadModel(cstring(fileName));
+	return symbols().kreb_LoadModel(cstring(fileName));
 }
 export function LoadModelFromMesh(mesh: Pointer): Pointer | null {
-	return symbols.kreb_LoadModelFromMesh(mesh);
+	return symbols().kreb_LoadModelFromMesh(mesh);
 }
 export function IsModelValid(model: Pointer): boolean {
-	return symbols.kreb_IsModelValid(model) === 1;
+	return symbols().kreb_IsModelValid(model) === 1;
 }
 export function UnloadModel(model: Pointer): void {
-	symbols.kreb_UnloadModel(model);
+	symbols().kreb_UnloadModel(model);
 }
 export function GetModelBoundingBox(model: Pointer): Float32Array {
-	symbols.kreb_GetModelBoundingBox(model, scratchPtr);
+	symbols().kreb_GetModelBoundingBox(model, scratchPtr);
 	return scratch.slice(0, 6);
 }
 export function DrawModel(
@@ -3982,7 +4035,7 @@ export function DrawModel(
 	scale: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawModel(model, position_x, position_y, position_z, scale, tint);
+	symbols().kreb_DrawModel(model, position_x, position_y, position_z, scale, tint);
 }
 export function DrawModelEx(
 	model: Pointer,
@@ -3998,7 +4051,7 @@ export function DrawModelEx(
 	scale_z: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawModelEx(
+	symbols().kreb_DrawModelEx(
 		model,
 		position_x,
 		position_y,
@@ -4021,7 +4074,7 @@ export function DrawModelWires(
 	scale: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawModelWires(model, position_x, position_y, position_z, scale, tint);
+	symbols().kreb_DrawModelWires(model, position_x, position_y, position_z, scale, tint);
 }
 export function DrawModelWiresEx(
 	model: Pointer,
@@ -4037,7 +4090,7 @@ export function DrawModelWiresEx(
 	scale_z: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawModelWiresEx(
+	symbols().kreb_DrawModelWiresEx(
 		model,
 		position_x,
 		position_y,
@@ -4061,7 +4114,7 @@ export function DrawBoundingBox(
 	box_max_z: number,
 	color: number,
 ): void {
-	symbols.kreb_DrawBoundingBox(
+	symbols().kreb_DrawBoundingBox(
 		box_min_x,
 		box_min_y,
 		box_min_z,
@@ -4080,7 +4133,7 @@ export function DrawBillboard(
 	scale: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawBillboard(camera, texture, position_x, position_y, position_z, scale, tint);
+	symbols().kreb_DrawBillboard(camera, texture, position_x, position_y, position_z, scale, tint);
 }
 export function DrawBillboardRec(
 	camera: Pointer,
@@ -4096,7 +4149,7 @@ export function DrawBillboardRec(
 	size_y: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawBillboardRec(
+	symbols().kreb_DrawBillboardRec(
 		camera,
 		texture,
 		source_x,
@@ -4131,7 +4184,7 @@ export function DrawBillboardPro(
 	rotation: number,
 	tint: number,
 ): void {
-	symbols.kreb_DrawBillboardPro(
+	symbols().kreb_DrawBillboardPro(
 		camera,
 		texture,
 		source_x,
@@ -4153,7 +4206,7 @@ export function DrawBillboardPro(
 	);
 }
 export function UploadMesh(mesh: Pointer, dynamic: boolean): void {
-	symbols.kreb_UploadMesh(mesh, dynamic ? 1 : 0);
+	symbols().kreb_UploadMesh(mesh, dynamic ? 1 : 0);
 }
 export function UpdateMeshBuffer(
 	mesh: Pointer,
@@ -4162,13 +4215,13 @@ export function UpdateMeshBuffer(
 	dataSize: number,
 	offset: number,
 ): void {
-	symbols.kreb_UpdateMeshBuffer(mesh, index, data, dataSize, offset);
+	symbols().kreb_UpdateMeshBuffer(mesh, index, data, dataSize, offset);
 }
 export function UnloadMesh(mesh: Pointer): void {
-	symbols.kreb_UnloadMesh(mesh);
+	symbols().kreb_UnloadMesh(mesh);
 }
 export function DrawMesh(mesh: Pointer, material: Pointer, transform: Float32Array): void {
-	symbols.kreb_DrawMesh(mesh, material, ptr(transform));
+	symbols().kreb_DrawMesh(mesh, material, ptr(transform));
 }
 export function DrawMeshInstanced(
 	mesh: Pointer,
@@ -4176,23 +4229,23 @@ export function DrawMeshInstanced(
 	transforms: Pointer,
 	instances: number,
 ): void {
-	symbols.kreb_DrawMeshInstanced(mesh, material, transforms, instances);
+	symbols().kreb_DrawMeshInstanced(mesh, material, transforms, instances);
 }
 export function GetMeshBoundingBox(mesh: Pointer): Float32Array {
-	symbols.kreb_GetMeshBoundingBox(mesh, scratchPtr);
+	symbols().kreb_GetMeshBoundingBox(mesh, scratchPtr);
 	return scratch.slice(0, 6);
 }
 export function GenMeshTangents(mesh: Pointer): void {
-	symbols.kreb_GenMeshTangents(mesh);
+	symbols().kreb_GenMeshTangents(mesh);
 }
 export function ExportMesh(mesh: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportMesh(mesh, cstring(fileName)) === 1;
+	return symbols().kreb_ExportMesh(mesh, cstring(fileName)) === 1;
 }
 export function ExportMeshAsCode(mesh: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportMeshAsCode(mesh, cstring(fileName)) === 1;
+	return symbols().kreb_ExportMeshAsCode(mesh, cstring(fileName)) === 1;
 }
 export function GenMeshPoly(sides: number, radius: number): Pointer | null {
-	return symbols.kreb_GenMeshPoly(sides, radius);
+	return symbols().kreb_GenMeshPoly(sides, radius);
 }
 export function GenMeshPlane(
 	width: number,
@@ -4200,22 +4253,22 @@ export function GenMeshPlane(
 	resX: number,
 	resZ: number,
 ): Pointer | null {
-	return symbols.kreb_GenMeshPlane(width, length, resX, resZ);
+	return symbols().kreb_GenMeshPlane(width, length, resX, resZ);
 }
 export function GenMeshCube(width: number, height: number, length: number): Pointer | null {
-	return symbols.kreb_GenMeshCube(width, height, length);
+	return symbols().kreb_GenMeshCube(width, height, length);
 }
 export function GenMeshSphere(radius: number, rings: number, slices: number): Pointer | null {
-	return symbols.kreb_GenMeshSphere(radius, rings, slices);
+	return symbols().kreb_GenMeshSphere(radius, rings, slices);
 }
 export function GenMeshHemiSphere(radius: number, rings: number, slices: number): Pointer | null {
-	return symbols.kreb_GenMeshHemiSphere(radius, rings, slices);
+	return symbols().kreb_GenMeshHemiSphere(radius, rings, slices);
 }
 export function GenMeshCylinder(radius: number, height: number, slices: number): Pointer | null {
-	return symbols.kreb_GenMeshCylinder(radius, height, slices);
+	return symbols().kreb_GenMeshCylinder(radius, height, slices);
 }
 export function GenMeshCone(radius: number, height: number, slices: number): Pointer | null {
-	return symbols.kreb_GenMeshCone(radius, height, slices);
+	return symbols().kreb_GenMeshCone(radius, height, slices);
 }
 export function GenMeshTorus(
 	radius: number,
@@ -4223,7 +4276,7 @@ export function GenMeshTorus(
 	radSeg: number,
 	sides: number,
 ): Pointer | null {
-	return symbols.kreb_GenMeshTorus(radius, size, radSeg, sides);
+	return symbols().kreb_GenMeshTorus(radius, size, radSeg, sides);
 }
 export function GenMeshKnot(
 	radius: number,
@@ -4231,7 +4284,7 @@ export function GenMeshKnot(
 	radSeg: number,
 	sides: number,
 ): Pointer | null {
-	return symbols.kreb_GenMeshKnot(radius, size, radSeg, sides);
+	return symbols().kreb_GenMeshKnot(radius, size, radSeg, sides);
 }
 export function GenMeshHeightmap(
 	heightmap: Pointer,
@@ -4239,7 +4292,7 @@ export function GenMeshHeightmap(
 	size_y: number,
 	size_z: number,
 ): Pointer | null {
-	return symbols.kreb_GenMeshHeightmap(heightmap, size_x, size_y, size_z);
+	return symbols().kreb_GenMeshHeightmap(heightmap, size_x, size_y, size_z);
 }
 export function GenMeshCubicmap(
 	cubicmap: Pointer,
@@ -4247,31 +4300,31 @@ export function GenMeshCubicmap(
 	cubeSize_y: number,
 	cubeSize_z: number,
 ): Pointer | null {
-	return symbols.kreb_GenMeshCubicmap(cubicmap, cubeSize_x, cubeSize_y, cubeSize_z);
+	return symbols().kreb_GenMeshCubicmap(cubicmap, cubeSize_x, cubeSize_y, cubeSize_z);
 }
 export function LoadMaterials(fileName: string, materialCount: Pointer): Pointer | null {
-	return symbols.kreb_LoadMaterials(cstring(fileName), materialCount);
+	return symbols().kreb_LoadMaterials(cstring(fileName), materialCount);
 }
 export function LoadMaterialDefault(): Pointer | null {
-	return symbols.kreb_LoadMaterialDefault();
+	return symbols().kreb_LoadMaterialDefault();
 }
 export function IsMaterialValid(material: Pointer): boolean {
-	return symbols.kreb_IsMaterialValid(material) === 1;
+	return symbols().kreb_IsMaterialValid(material) === 1;
 }
 export function UnloadMaterial(material: Pointer): void {
-	symbols.kreb_UnloadMaterial(material);
+	symbols().kreb_UnloadMaterial(material);
 }
 export function SetMaterialTexture(material: Pointer, mapType: number, texture: Pointer): void {
-	symbols.kreb_SetMaterialTexture(material, mapType, texture);
+	symbols().kreb_SetMaterialTexture(material, mapType, texture);
 }
 export function SetModelMeshMaterial(model: Pointer, meshId: number, materialId: number): void {
-	symbols.kreb_SetModelMeshMaterial(model, meshId, materialId);
+	symbols().kreb_SetModelMeshMaterial(model, meshId, materialId);
 }
 export function LoadModelAnimations(fileName: string, animCount: Pointer): Pointer | null {
-	return symbols.kreb_LoadModelAnimations(cstring(fileName), animCount);
+	return symbols().kreb_LoadModelAnimations(cstring(fileName), animCount);
 }
 export function UpdateModelAnimation(model: Pointer, anim: Pointer, frame: number): void {
-	symbols.kreb_UpdateModelAnimation(model, anim, frame);
+	symbols().kreb_UpdateModelAnimation(model, anim, frame);
 }
 export function UpdateModelAnimationEx(
 	model: Pointer,
@@ -4281,13 +4334,13 @@ export function UpdateModelAnimationEx(
 	frameB: number,
 	blend: number,
 ): void {
-	symbols.kreb_UpdateModelAnimationEx(model, animA, frameA, animB, frameB, blend);
+	symbols().kreb_UpdateModelAnimationEx(model, animA, frameA, animB, frameB, blend);
 }
 export function UnloadModelAnimations(animations: Pointer, animCount: number): void {
-	symbols.kreb_UnloadModelAnimations(animations, animCount);
+	symbols().kreb_UnloadModelAnimations(animations, animCount);
 }
 export function IsModelAnimationValid(model: Pointer, anim: Pointer): boolean {
-	return symbols.kreb_IsModelAnimationValid(model, anim) === 1;
+	return symbols().kreb_IsModelAnimationValid(model, anim) === 1;
 }
 export function CheckCollisionSpheres(
 	center1_x: number,
@@ -4300,7 +4353,7 @@ export function CheckCollisionSpheres(
 	radius2: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionSpheres(
+		symbols().kreb_CheckCollisionSpheres(
 			center1_x,
 			center1_y,
 			center1_z,
@@ -4327,7 +4380,7 @@ export function CheckCollisionBoxes(
 	box2_max_z: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionBoxes(
+		symbols().kreb_CheckCollisionBoxes(
 			box1_min_x,
 			box1_min_y,
 			box1_min_z,
@@ -4356,7 +4409,7 @@ export function CheckCollisionBoxSphere(
 	radius: number,
 ): boolean {
 	return (
-		symbols.kreb_CheckCollisionBoxSphere(
+		symbols().kreb_CheckCollisionBoxSphere(
 			box_min_x,
 			box_min_y,
 			box_min_z,
@@ -4382,7 +4435,7 @@ export function GetRayCollisionSphere(
 	center_z: number,
 	radius: number,
 ): Float32Array {
-	symbols.kreb_GetRayCollisionSphere(
+	symbols().kreb_GetRayCollisionSphere(
 		ray_position_x,
 		ray_position_y,
 		ray_position_z,
@@ -4411,7 +4464,7 @@ export function GetRayCollisionBox(
 	box_max_y: number,
 	box_max_z: number,
 ): Float32Array {
-	symbols.kreb_GetRayCollisionBox(
+	symbols().kreb_GetRayCollisionBox(
 		ray_position_x,
 		ray_position_y,
 		ray_position_z,
@@ -4438,7 +4491,7 @@ export function GetRayCollisionMesh(
 	mesh: Pointer,
 	transform: Float32Array,
 ): Float32Array {
-	symbols.kreb_GetRayCollisionMesh(
+	symbols().kreb_GetRayCollisionMesh(
 		ray_position_x,
 		ray_position_y,
 		ray_position_z,
@@ -4468,7 +4521,7 @@ export function GetRayCollisionTriangle(
 	p3_y: number,
 	p3_z: number,
 ): Float32Array {
-	symbols.kreb_GetRayCollisionTriangle(
+	symbols().kreb_GetRayCollisionTriangle(
 		ray_position_x,
 		ray_position_y,
 		ray_position_z,
@@ -4508,7 +4561,7 @@ export function GetRayCollisionQuad(
 	p4_y: number,
 	p4_z: number,
 ): Float32Array {
-	symbols.kreb_GetRayCollisionQuad(
+	symbols().kreb_GetRayCollisionQuad(
 		ray_position_x,
 		ray_position_y,
 		ray_position_z,
@@ -4532,92 +4585,92 @@ export function GetRayCollisionQuad(
 	return scratch.slice(0, 8);
 }
 export function InitAudioDevice(): void {
-	symbols.kreb_InitAudioDevice();
+	symbols().kreb_InitAudioDevice();
 }
 export function CloseAudioDevice(): void {
-	symbols.kreb_CloseAudioDevice();
+	symbols().kreb_CloseAudioDevice();
 }
 export function IsAudioDeviceReady(): boolean {
-	return symbols.kreb_IsAudioDeviceReady() === 1;
+	return symbols().kreb_IsAudioDeviceReady() === 1;
 }
 export function SetMasterVolume(volume: number): void {
-	symbols.kreb_SetMasterVolume(volume);
+	symbols().kreb_SetMasterVolume(volume);
 }
 export function GetMasterVolume(): number {
-	return symbols.kreb_GetMasterVolume();
+	return symbols().kreb_GetMasterVolume();
 }
 export function LoadWave(fileName: string): Pointer | null {
-	return symbols.kreb_LoadWave(cstring(fileName));
+	return symbols().kreb_LoadWave(cstring(fileName));
 }
 export function LoadWaveFromMemory(
 	fileType: string,
 	fileData: Pointer,
 	dataSize: number,
 ): Pointer | null {
-	return symbols.kreb_LoadWaveFromMemory(cstring(fileType), fileData, dataSize);
+	return symbols().kreb_LoadWaveFromMemory(cstring(fileType), fileData, dataSize);
 }
 export function IsWaveValid(wave: Pointer): boolean {
-	return symbols.kreb_IsWaveValid(wave) === 1;
+	return symbols().kreb_IsWaveValid(wave) === 1;
 }
 export function LoadSound(fileName: string): Pointer | null {
-	return symbols.kreb_LoadSound(cstring(fileName));
+	return symbols().kreb_LoadSound(cstring(fileName));
 }
 export function LoadSoundFromWave(wave: Pointer): Pointer | null {
-	return symbols.kreb_LoadSoundFromWave(wave);
+	return symbols().kreb_LoadSoundFromWave(wave);
 }
 export function LoadSoundAlias(source: Pointer): Pointer | null {
-	return symbols.kreb_LoadSoundAlias(source);
+	return symbols().kreb_LoadSoundAlias(source);
 }
 export function IsSoundValid(sound: Pointer): boolean {
-	return symbols.kreb_IsSoundValid(sound) === 1;
+	return symbols().kreb_IsSoundValid(sound) === 1;
 }
 export function UpdateSound(sound: Pointer, data: Pointer, sampleCount: number): void {
-	symbols.kreb_UpdateSound(sound, data, sampleCount);
+	symbols().kreb_UpdateSound(sound, data, sampleCount);
 }
 export function UnloadWave(wave: Pointer): void {
-	symbols.kreb_UnloadWave(wave);
+	symbols().kreb_UnloadWave(wave);
 }
 export function UnloadSound(sound: Pointer): void {
-	symbols.kreb_UnloadSound(sound);
+	symbols().kreb_UnloadSound(sound);
 }
 export function UnloadSoundAlias(alias: Pointer): void {
-	symbols.kreb_UnloadSoundAlias(alias);
+	symbols().kreb_UnloadSoundAlias(alias);
 }
 export function ExportWave(wave: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportWave(wave, cstring(fileName)) === 1;
+	return symbols().kreb_ExportWave(wave, cstring(fileName)) === 1;
 }
 export function ExportWaveAsCode(wave: Pointer, fileName: string): boolean {
-	return symbols.kreb_ExportWaveAsCode(wave, cstring(fileName)) === 1;
+	return symbols().kreb_ExportWaveAsCode(wave, cstring(fileName)) === 1;
 }
 export function PlaySound(sound: Pointer): void {
-	symbols.kreb_PlaySound(sound);
+	symbols().kreb_PlaySound(sound);
 }
 export function StopSound(sound: Pointer): void {
-	symbols.kreb_StopSound(sound);
+	symbols().kreb_StopSound(sound);
 }
 export function PauseSound(sound: Pointer): void {
-	symbols.kreb_PauseSound(sound);
+	symbols().kreb_PauseSound(sound);
 }
 export function ResumeSound(sound: Pointer): void {
-	symbols.kreb_ResumeSound(sound);
+	symbols().kreb_ResumeSound(sound);
 }
 export function IsSoundPlaying(sound: Pointer): boolean {
-	return symbols.kreb_IsSoundPlaying(sound) === 1;
+	return symbols().kreb_IsSoundPlaying(sound) === 1;
 }
 export function SetSoundVolume(sound: Pointer, volume: number): void {
-	symbols.kreb_SetSoundVolume(sound, volume);
+	symbols().kreb_SetSoundVolume(sound, volume);
 }
 export function SetSoundPitch(sound: Pointer, pitch: number): void {
-	symbols.kreb_SetSoundPitch(sound, pitch);
+	symbols().kreb_SetSoundPitch(sound, pitch);
 }
 export function SetSoundPan(sound: Pointer, pan: number): void {
-	symbols.kreb_SetSoundPan(sound, pan);
+	symbols().kreb_SetSoundPan(sound, pan);
 }
 export function WaveCopy(wave: Pointer): Pointer | null {
-	return symbols.kreb_WaveCopy(wave);
+	return symbols().kreb_WaveCopy(wave);
 }
 export function WaveCrop(wave: Pointer, initFrame: number, finalFrame: number): void {
-	symbols.kreb_WaveCrop(wave, initFrame, finalFrame);
+	symbols().kreb_WaveCrop(wave, initFrame, finalFrame);
 }
 export function WaveFormat(
 	wave: Pointer,
@@ -4625,124 +4678,124 @@ export function WaveFormat(
 	sampleSize: number,
 	channels: number,
 ): void {
-	symbols.kreb_WaveFormat(wave, sampleRate, sampleSize, channels);
+	symbols().kreb_WaveFormat(wave, sampleRate, sampleSize, channels);
 }
 export function LoadWaveSamples(wave: Pointer): Pointer | null {
-	return symbols.kreb_LoadWaveSamples(wave);
+	return symbols().kreb_LoadWaveSamples(wave);
 }
 export function UnloadWaveSamples(samples: Pointer): void {
-	symbols.kreb_UnloadWaveSamples(samples);
+	symbols().kreb_UnloadWaveSamples(samples);
 }
 export function LoadMusicStream(fileName: string): Pointer | null {
-	return symbols.kreb_LoadMusicStream(cstring(fileName));
+	return symbols().kreb_LoadMusicStream(cstring(fileName));
 }
 export function LoadMusicStreamFromMemory(
 	fileType: string,
 	data: Pointer,
 	dataSize: number,
 ): Pointer | null {
-	return symbols.kreb_LoadMusicStreamFromMemory(cstring(fileType), data, dataSize);
+	return symbols().kreb_LoadMusicStreamFromMemory(cstring(fileType), data, dataSize);
 }
 export function IsMusicValid(music: Pointer): boolean {
-	return symbols.kreb_IsMusicValid(music) === 1;
+	return symbols().kreb_IsMusicValid(music) === 1;
 }
 export function UnloadMusicStream(music: Pointer): void {
-	symbols.kreb_UnloadMusicStream(music);
+	symbols().kreb_UnloadMusicStream(music);
 }
 export function PlayMusicStream(music: Pointer): void {
-	symbols.kreb_PlayMusicStream(music);
+	symbols().kreb_PlayMusicStream(music);
 }
 export function IsMusicStreamPlaying(music: Pointer): boolean {
-	return symbols.kreb_IsMusicStreamPlaying(music) === 1;
+	return symbols().kreb_IsMusicStreamPlaying(music) === 1;
 }
 export function UpdateMusicStream(music: Pointer): void {
-	symbols.kreb_UpdateMusicStream(music);
+	symbols().kreb_UpdateMusicStream(music);
 }
 export function StopMusicStream(music: Pointer): void {
-	symbols.kreb_StopMusicStream(music);
+	symbols().kreb_StopMusicStream(music);
 }
 export function PauseMusicStream(music: Pointer): void {
-	symbols.kreb_PauseMusicStream(music);
+	symbols().kreb_PauseMusicStream(music);
 }
 export function ResumeMusicStream(music: Pointer): void {
-	symbols.kreb_ResumeMusicStream(music);
+	symbols().kreb_ResumeMusicStream(music);
 }
 export function SeekMusicStream(music: Pointer, position: number): void {
-	symbols.kreb_SeekMusicStream(music, position);
+	symbols().kreb_SeekMusicStream(music, position);
 }
 export function SetMusicVolume(music: Pointer, volume: number): void {
-	symbols.kreb_SetMusicVolume(music, volume);
+	symbols().kreb_SetMusicVolume(music, volume);
 }
 export function SetMusicPitch(music: Pointer, pitch: number): void {
-	symbols.kreb_SetMusicPitch(music, pitch);
+	symbols().kreb_SetMusicPitch(music, pitch);
 }
 export function SetMusicPan(music: Pointer, pan: number): void {
-	symbols.kreb_SetMusicPan(music, pan);
+	symbols().kreb_SetMusicPan(music, pan);
 }
 export function GetMusicTimeLength(music: Pointer): number {
-	return symbols.kreb_GetMusicTimeLength(music);
+	return symbols().kreb_GetMusicTimeLength(music);
 }
 export function GetMusicTimePlayed(music: Pointer): number {
-	return symbols.kreb_GetMusicTimePlayed(music);
+	return symbols().kreb_GetMusicTimePlayed(music);
 }
 export function LoadAudioStream(
 	sampleRate: number,
 	sampleSize: number,
 	channels: number,
 ): Pointer | null {
-	return symbols.kreb_LoadAudioStream(sampleRate, sampleSize, channels);
+	return symbols().kreb_LoadAudioStream(sampleRate, sampleSize, channels);
 }
 export function IsAudioStreamValid(stream: Pointer): boolean {
-	return symbols.kreb_IsAudioStreamValid(stream) === 1;
+	return symbols().kreb_IsAudioStreamValid(stream) === 1;
 }
 export function UnloadAudioStream(stream: Pointer): void {
-	symbols.kreb_UnloadAudioStream(stream);
+	symbols().kreb_UnloadAudioStream(stream);
 }
 export function UpdateAudioStream(stream: Pointer, data: Pointer, frameCount: number): void {
-	symbols.kreb_UpdateAudioStream(stream, data, frameCount);
+	symbols().kreb_UpdateAudioStream(stream, data, frameCount);
 }
 export function IsAudioStreamProcessed(stream: Pointer): boolean {
-	return symbols.kreb_IsAudioStreamProcessed(stream) === 1;
+	return symbols().kreb_IsAudioStreamProcessed(stream) === 1;
 }
 export function PlayAudioStream(stream: Pointer): void {
-	symbols.kreb_PlayAudioStream(stream);
+	symbols().kreb_PlayAudioStream(stream);
 }
 export function PauseAudioStream(stream: Pointer): void {
-	symbols.kreb_PauseAudioStream(stream);
+	symbols().kreb_PauseAudioStream(stream);
 }
 export function ResumeAudioStream(stream: Pointer): void {
-	symbols.kreb_ResumeAudioStream(stream);
+	symbols().kreb_ResumeAudioStream(stream);
 }
 export function IsAudioStreamPlaying(stream: Pointer): boolean {
-	return symbols.kreb_IsAudioStreamPlaying(stream) === 1;
+	return symbols().kreb_IsAudioStreamPlaying(stream) === 1;
 }
 export function StopAudioStream(stream: Pointer): void {
-	symbols.kreb_StopAudioStream(stream);
+	symbols().kreb_StopAudioStream(stream);
 }
 export function SetAudioStreamVolume(stream: Pointer, volume: number): void {
-	symbols.kreb_SetAudioStreamVolume(stream, volume);
+	symbols().kreb_SetAudioStreamVolume(stream, volume);
 }
 export function SetAudioStreamPitch(stream: Pointer, pitch: number): void {
-	symbols.kreb_SetAudioStreamPitch(stream, pitch);
+	symbols().kreb_SetAudioStreamPitch(stream, pitch);
 }
 export function SetAudioStreamPan(stream: Pointer, pan: number): void {
-	symbols.kreb_SetAudioStreamPan(stream, pan);
+	symbols().kreb_SetAudioStreamPan(stream, pan);
 }
 export function SetAudioStreamBufferSizeDefault(size: number): void {
-	symbols.kreb_SetAudioStreamBufferSizeDefault(size);
+	symbols().kreb_SetAudioStreamBufferSizeDefault(size);
 }
 export function SetAudioStreamCallback(stream: Pointer, callback: Pointer): void {
-	symbols.kreb_SetAudioStreamCallback(stream, callback);
+	symbols().kreb_SetAudioStreamCallback(stream, callback);
 }
 export function AttachAudioStreamProcessor(stream: Pointer, processor: Pointer): void {
-	symbols.kreb_AttachAudioStreamProcessor(stream, processor);
+	symbols().kreb_AttachAudioStreamProcessor(stream, processor);
 }
 export function DetachAudioStreamProcessor(stream: Pointer, processor: Pointer): void {
-	symbols.kreb_DetachAudioStreamProcessor(stream, processor);
+	symbols().kreb_DetachAudioStreamProcessor(stream, processor);
 }
 export function AttachAudioMixedProcessor(processor: Pointer): void {
-	symbols.kreb_AttachAudioMixedProcessor(processor);
+	symbols().kreb_AttachAudioMixedProcessor(processor);
 }
 export function DetachAudioMixedProcessor(processor: Pointer): void {
-	symbols.kreb_DetachAudioMixedProcessor(processor);
+	symbols().kreb_DetachAudioMixedProcessor(processor);
 }

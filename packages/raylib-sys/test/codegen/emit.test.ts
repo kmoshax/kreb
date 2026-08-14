@@ -29,7 +29,7 @@ test('a void function with scalar and color parameters', () => {
 	expect(ts).toContain("\tkreb_DrawPixel: { args: ['i32', 'i32', 'u32'], returns: 'void' },");
 	expect(ts).toContain(
 		'export function DrawPixel(posX: number, posY: number, color: number): void {\n' +
-			'\tsymbols.kreb_DrawPixel(posX, posY, color);\n}',
+			'\tsymbols().kreb_DrawPixel(posX, posY, color);\n}',
 	);
 });
 
@@ -97,7 +97,7 @@ test('a handle return is heap allocated', () => {
 	expect(c).toContain('Texture *kreb_result = (Texture *)malloc(sizeof(Texture));');
 	expect(c).toContain('*kreb_result = LoadTexture(fileName);');
 	expect(ts).toContain('export function LoadTexture(fileName: string): Pointer | null {');
-	expect(ts).toContain('\treturn symbols.kreb_LoadTexture(cstring(fileName));');
+	expect(ts).toContain('\treturn symbols().kreb_LoadTexture(cstring(fileName));');
 });
 
 test('bool crosses as int32 and surfaces as boolean', () => {
@@ -113,7 +113,7 @@ test('bool crosses as int32 and surfaces as boolean', () => {
 		'int32_t kreb_IsKeyDown(int32_t key) {\n    return (int32_t)IsKeyDown(key);\n}',
 	);
 	expect(ts).toContain('export function IsKeyDown(key: number): boolean {');
-	expect(ts).toContain('\treturn symbols.kreb_IsKeyDown(key) === 1;');
+	expect(ts).toContain('\treturn symbols().kreb_IsKeyDown(key) === 1;');
 });
 
 test('a matrix parameter arrives as a float pointer', () => {
@@ -128,7 +128,7 @@ test('a matrix parameter arrives as a float pointer', () => {
 	expect(c).toContain('void kreb_SetShaderValueMatrix(const float *mat)');
 	expect(c).toContain('SetShaderValueMatrix(kreb_matrix_from_floats(mat));');
 	expect(ts).toContain('export function SetShaderValueMatrix(mat: Float32Array): void {');
-	expect(ts).toContain('\tsymbols.kreb_SetShaderValueMatrix(ptr(mat));');
+	expect(ts).toContain('\tsymbols().kreb_SetShaderValueMatrix(ptr(mat));');
 });
 
 test('variadic functions are skipped with a named reason', () => {

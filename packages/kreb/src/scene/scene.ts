@@ -10,6 +10,10 @@ import { UiSystem } from '../ui/system.ts';
 export const assetCache = new AssetCache();
 
 export class Scene extends Node {
+	protected override get isSceneRoot(): boolean {
+		return true;
+	}
+
 	camera2d: Camera2D | null = null;
 	camera3d: Camera3D | null = null;
 

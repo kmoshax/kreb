@@ -1,43 +1,42 @@
 // Manual check: bun packages/kreb/examples/demo.ts
 
-import { buildShim } from '@kreb/raylib-sys/build';
-import { SHIM_SOURCE } from '@kreb/raylib-sys/shim-path';
-import type { Draw2D, Draw3D, DrawUI } from 'kreb';
-
-await buildShim([SHIM_SOURCE], 'kreb_raylib');
-
-const {
-	Ease,
-	ParticleEmitter2D,
-	Timer,
-	fsm,
-	Button,
-	Checkbox,
-	Label,
-	Panel,
-	Slider,
-	TextInput,
+import {
+	Anchor,
 	actions,
 	axis2,
-	input,
-	Key,
-	Anchor,
+	Button,
 	Camera2D,
 	Camera3D,
+	Checkbox,
+	DARKBLUE,
+	type Draw2D,
+	type Draw3D,
+	type DrawUI,
+	Ease,
+	fsm,
+	GOLD,
 	game,
 	Image,
+	input,
+	Key,
+	Label,
+	MAROON,
 	Mesh,
 	Model,
 	Node2D,
 	Node3D,
 	NodeUI,
+	Panel,
+	ParticleEmitter2D,
+	RAYWHITE,
 	Scene,
+	SKYBLUE,
+	Slider,
+	TextInput,
 	Texture,
-} = await import('kreb');
-
-const { DARKBLUE, GOLD, MAROON, RAYWHITE, SKYBLUE, WHITE } = await import(
-	'@kreb/raylib-sys/colors'
-);
+	Timer,
+	WHITE,
+} from 'kreb';
 
 const Act = actions({
 	move: axis2({ up: Key.KEY_W, down: Key.KEY_S, left: Key.KEY_A, right: Key.KEY_D }),
@@ -162,20 +161,17 @@ class Hud extends NodeUI {
 
 		// The scene's runner drives the tween; the timer decides when to start one.
 		if (this.beat.update(dt) > 0) {
-			const scene = this.parent;
-			if (scene instanceof Scene) {
-				scene.tweens.run(0.6, Ease.OutCubic, (t) => {
-					this.pulse = 1 - t;
-				});
-			}
+			this.scene.tweens.run(0.6, Ease.OutCubic, (t) => {
+				this.pulse = 1 - t;
+			});
 		}
 	}
 
 	override draw(g: DrawUI): void {
-		g.rect(0, 0, 240, 62, { color: DARKBLUE });
+		g.rect(0, 0, g.width, g.height, { color: DARKBLUE });
 		g.text('WASD · shift · space', 10, 8, { size: 20, color: RAYWHITE });
 		g.text(`${playerName} · ${this.jumps} jumps`, 10, 32, { size: 16, color: WHITE });
-		g.rect(0, 54, 240 * this.pulse, 4, { color: GOLD });
+		g.rect(0, g.height - 8, g.width * this.pulse, 4, { color: GOLD });
 	}
 }
 
@@ -184,37 +180,36 @@ class Settings extends Scene {
 
 	override ready(): void {
 		const panel = this.add(new Panel('panel'));
-		panel.anchor = Anchor.Center;
-		panel.offset = { x: -200, y: -160, width: 400, height: 320 };
+		panel.place({ anchor: Anchor.Center, x: -200, y: -160, width: 400, height: 320 });
 
 		const title = panel.add(new Label('Settings', 'title'));
-		title.offset = { x: 24, y: 20, width: 200, height: 28 };
+		title.place({ x: 24, y: 20, width: 200, height: 28 });
 
 		const fullscreen = panel.add(new Checkbox('Grid overlay', true, 'grid'));
-		fullscreen.offset = { x: 24, y: 70, width: 320, height: 28 };
+		fullscreen.place({ x: 24, y: 70, width: 320, height: 28 });
 		fullscreen.onChange = (on) => {
 			showGrid = on;
 		};
 
 		const volumeLabel = panel.add(new Label('Cube speed', 'volumeLabel'));
 		volumeLabel.muted = true;
-		volumeLabel.offset = { x: 24, y: 118, width: 200, height: 24 };
+		volumeLabel.place({ x: 24, y: 118, width: 200, height: 24 });
 
 		const speed = panel.add(new Slider(cubeSpeed, 0, 3, 'speed'));
-		speed.offset = { x: 24, y: 146, width: 352, height: 24 };
+		speed.place({ x: 24, y: 146, width: 352, height: 24 });
 		speed.onChange = (value) => {
 			cubeSpeed = value;
 		};
 
 		const name = panel.add(new TextInput(playerName, 'name'));
 		name.placeholder = 'player name';
-		name.offset = { x: 24, y: 190, width: 352, height: 32 };
+		name.place({ x: 24, y: 190, width: 352, height: 32 });
 		name.onChange = (value) => {
 			playerName = value;
 		};
 
 		const close = panel.add(new Button('Close', () => this.onClose(), 'close'));
-		close.offset = { x: 24, y: 248, width: 352, height: 40 };
+		close.place({ x: 24, y: 248, width: 352, height: 40 });
 	}
 }
 
@@ -240,8 +235,7 @@ class Level extends Scene {
 		player.add(new Trail('trail')).position.set({ x: -40, y: 0 });
 
 		const hud = this.add(new Hud('hud'));
-		hud.anchor = Anchor.TopLeft;
-		hud.offset = { x: 12, y: 12, width: 240, height: 62 };
+		hud.place({ anchor: Anchor.TopLeft, x: 12, y: 12, width: 240, height: 62 });
 
 		const open = this.add(
 			new Button('Settings', () => {
@@ -250,8 +244,7 @@ class Level extends Scene {
 				running.scenes.push(settings);
 			}),
 		);
-		open.anchor = Anchor.TopRight;
-		open.offset = { x: -152, y: 12, width: 140, height: 36 };
+		open.place({ anchor: Anchor.TopRight, x: -152, y: 12 });
 	}
 }
 

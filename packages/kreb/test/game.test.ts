@@ -147,8 +147,8 @@ test('collision runs inside the fixed step and fires callbacks', () => {
 
 	class Field extends k.Scene {
 		override ready(): void {
-			this.add(new Pickup({ x: 20, y: 20 }, {}, 'pickup')).position.set({ x: 60, y: 0 });
-			this.add(new Walker({ x: 20, y: 20 }, {}, 'walker'));
+			this.add(new Pickup({ size: [20, 20], name: 'pickup' })).position.set({ x: 60, y: 0 });
+			this.add(new Walker({ size: [20, 20], name: 'walker' }));
 		}
 	}
 

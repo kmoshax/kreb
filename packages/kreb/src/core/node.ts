@@ -6,6 +6,8 @@ export const RenderSpace = {
 
 export type RenderSpace = (typeof RenderSpace)[keyof typeof RenderSpace];
 
+import type { Scene } from '../scene/scene.ts';
+
 export abstract class Node {
 	name: string;
 
@@ -25,6 +27,25 @@ export abstract class Node {
 
 	get parent(): Node | null {
 		return this.#parent;
+	}
+
+	/** Overridden by Scene; lets a node find its root without importing Scene. */
+	protected get isSceneRoot(): boolean {
+		return false;
+	}
+
+	/**
+	 * The Scene this node belongs to. Throws rather than returning null: a node
+	 * outside a scene has no assets, tweens or collision world to reach for, and
+	 * silently doing nothing is worse than saying so.
+	 */
+	get scene(): Scene {
+		for (let node: Node | null = this; node; node = node.#parent) {
+			// The flag is the discriminator; Node cannot name Scene at runtime.
+			if (node.isSceneRoot) return node as unknown as Scene;
+		}
+
+		throw new Error(`Node "${this.name}" is not inside a Scene`);
 	}
 
 	get children(): readonly Node[] {

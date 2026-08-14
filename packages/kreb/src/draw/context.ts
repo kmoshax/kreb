@@ -46,6 +46,9 @@ export interface Draw3D {
 }
 
 export interface DrawUI {
+	/** Resolved size of the node being drawn, after any content sizing. */
+	readonly width: number;
+	readonly height: number;
 	text(value: string, x: number, y: number, options?: TextOptions): void;
 	/** Width the given text would occupy, for centring and caret placement. */
 	measure(value: string, size?: number): number;

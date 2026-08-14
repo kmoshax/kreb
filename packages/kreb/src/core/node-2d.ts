@@ -14,6 +14,14 @@ export type Transform2D = {
  * calls take position, rotation and scale directly, so keeping them separate
  * avoids decomposing a matrix on every draw.
  */
+export type Node2DOptions = {
+	name?: string;
+	at?: readonly [number, number];
+	rotation?: number;
+	scale?: readonly [number, number];
+	zIndex?: number;
+};
+
 export class Node2D extends Node {
 	readonly position: TrackedVector2;
 	readonly scale: TrackedVector2;
@@ -28,12 +36,38 @@ export class Node2D extends Node {
 		scale: { x: 1, y: 1 },
 	};
 
-	constructor(name?: string) {
-		super(name);
+	constructor(options: Node2DOptions | string = {}) {
+		const settings = typeof options === 'string' ? { name: options } : options;
+		super(settings.name);
 
 		const invalidate = () => this.onTransformChanged();
-		this.position = new TrackedVector2(0, 0, invalidate);
-		this.scale = new TrackedVector2(1, 1, invalidate);
+		this.position = new TrackedVector2(settings.at?.[0] ?? 0, settings.at?.[1] ?? 0, invalidate);
+		this.scale = new TrackedVector2(settings.scale?.[0] ?? 1, settings.scale?.[1] ?? 1, invalidate);
+
+		this.#rotation = settings.rotation ?? 0;
+		this.zIndex = settings.zIndex ?? 0;
+	}
+
+	get x(): number {
+		return this.position.x;
+	}
+
+	set x(value: number) {
+		this.position.x = value;
+	}
+
+	get y(): number {
+		return this.position.y;
+	}
+
+	set y(value: number) {
+		this.position.y = value;
+	}
+
+	/** Chainable placement, so `scene.add(new Foo()).at(40, 280)` is one statement. */
+	at(x: number, y: number): this {
+		this.position.set({ x, y });
+		return this;
 	}
 
 	override get space(): RenderSpace | null {

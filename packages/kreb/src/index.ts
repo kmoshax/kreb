@@ -29,6 +29,7 @@ export {
 	type QueryOptions,
 	type RayHit,
 } from './collision/world.ts';
+export * from './color.ts';
 export { Camera2D, Camera3D, Projection } from './core/camera.ts';
 export { Loop } from './core/loop.ts';
 export { Node, RenderSpace } from './core/node.ts';
@@ -74,6 +75,7 @@ export { type InputDevice, raylibDevice } from './input/device.ts';
 export { Input, type InputOptions, input } from './input/input.ts';
 export { assetCache, Scene, SceneManager } from './scene/scene.ts';
 export { emptyUiInput, type UiInput } from './ui/input.ts';
+export { clearMeasureCache, measureText } from './ui/measure.ts';
 export { readUiInput } from './ui/read-input.ts';
 export { UiSystem } from './ui/system.ts';
 export { defaultTheme, type Theme } from './ui/theme.ts';

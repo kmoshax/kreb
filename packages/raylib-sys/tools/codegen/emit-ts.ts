@@ -87,13 +87,13 @@ function emitFunction(fn: PlannedFunction): string {
 		const call = [...args, 'scratchPtr'].join(', ');
 		return [
 			`export function ${fn.name}(${signature}): ${returnType} {`,
-			`\tsymbols.${fn.shimName}(${call});`,
+			`\tsymbols().${fn.shimName}(${call});`,
 			`\treturn scratch.slice(0, ${size});`,
 			'}',
 		].join('\n');
 	}
 
-	const call = `symbols.${fn.shimName}(${args.join(', ')})`;
+	const call = `symbols().${fn.shimName}(${args.join(', ')})`;
 
 	const returned = (() => {
 		switch (fn.returnInfo.kind) {
@@ -150,7 +150,16 @@ export function emitBindings(
 		'',
 		emitSymbols(plan, accessors, writers),
 		'',
-		'export const symbols = loadShim(SHIM_NAME, shimSymbols);',
+		'type Symbols = ReturnType<typeof loadShim<typeof shimSymbols>>;',
+		'',
+		'let cached: Symbols | null = null;',
+		'',
+		'// Loaded on first call rather than at import, so importing kreb never',
+		'// requires a built shim and callers need no dynamic import dance.',
+		'export function symbols(): Symbols {',
+		'\tcached ??= loadShim(SHIM_NAME, shimSymbols);',
+		'\treturn cached;',
+		'}',
 		'',
 		`const scratch = new Float32Array(${scratchSize});`,
 		'const scratchPtr = ptr(scratch);',
@@ -165,7 +174,7 @@ export function emitBindings(
 		'}',
 		'',
 		'export function free(handle: Pointer): void {',
-		'\tsymbols.kreb_free(handle);',
+		'\tsymbols().kreb_free(handle);',
 		'}',
 		'',
 		...plan.functions.map(emitFunction),

@@ -67,7 +67,7 @@ test('string returns decode', () => {
 });
 
 test('a heap handle round-trips through alloc, use, and free', () => {
-	const camera = rl.symbols.kreb_alloc_Camera2D();
+	const camera = rl.symbols().kreb_alloc_Camera2D();
 	expect(camera).not.toBeNull();
 	if (camera === null) throw new Error('allocation failed');
 

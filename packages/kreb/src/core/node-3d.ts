@@ -15,6 +15,12 @@ import { TrackedQuaternion, TrackedVector3 } from './tracked.ts';
  * position, axis, angle and scale, which cannot express a nested or sheared
  * hierarchy. Writing the composed matrix into model.transform can.
  */
+export type Node3DOptions = {
+	name?: string;
+	at?: readonly [number, number, number];
+	scale?: readonly [number, number, number];
+};
+
 export class Node3D extends Node {
 	readonly position: TrackedVector3;
 	readonly rotation: TrackedQuaternion;
@@ -23,13 +29,22 @@ export class Node3D extends Node {
 	#dirty = true;
 	#global: Matrix = MatrixIdentity();
 
-	constructor(name?: string) {
-		super(name);
+	constructor(options: Node3DOptions | string = {}) {
+		const settings = typeof options === 'string' ? { name: options } : options;
+		super(settings.name);
 
 		const invalidate = () => this.onTransformChanged();
-		this.position = new TrackedVector3(0, 0, 0, invalidate);
+		const at = settings.at ?? [0, 0, 0];
+		const scale = settings.scale ?? [1, 1, 1];
+
+		this.position = new TrackedVector3(at[0], at[1], at[2], invalidate);
 		this.rotation = new TrackedQuaternion(0, 0, 0, 1, invalidate);
-		this.scale = new TrackedVector3(1, 1, 1, invalidate);
+		this.scale = new TrackedVector3(scale[0], scale[1], scale[2], invalidate);
+	}
+
+	at(x: number, y: number, z: number): this {
+		this.position.set({ x, y, z });
+		return this;
 	}
 
 	override get space(): RenderSpace | null {

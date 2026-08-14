@@ -1,5 +1,6 @@
 import type { DrawUI } from '../draw/context.ts';
 import type { UiInput } from './input.ts';
+import { measureText } from './measure.ts';
 import { Widget } from './widget.ts';
 
 const CHECKBOX_SIZE = 20;
@@ -13,7 +14,7 @@ export class Panel extends Widget {
 	}
 
 	override draw(g: DrawUI): void {
-		const { width, height } = this.offset;
+		const { width, height } = g;
 		const { borderWidth: border } = this.theme;
 
 		g.rect(0, 0, width, height, { color: this.theme.panelBorder });
@@ -32,6 +33,10 @@ export class Label extends Widget {
 
 	override get focusable(): boolean {
 		return false;
+	}
+
+	protected override intrinsicSize() {
+		return { width: measureText(this.text, this.theme.fontSize), height: this.theme.fontSize };
 	}
 
 	override draw(g: DrawUI): void {
@@ -53,6 +58,15 @@ export class Button extends Widget {
 		if (onPress) this.onPress = onPress;
 	}
 
+	protected override intrinsicSize() {
+		const padding = this.theme.padding;
+
+		return {
+			width: measureText(this.text, this.theme.fontSize) + padding * 3,
+			height: this.theme.fontSize + padding * 2,
+		};
+	}
+
 	override activate(): void {
 		if (this.disabled) return;
 
@@ -64,7 +78,7 @@ export class Button extends Widget {
 	}
 
 	override draw(g: DrawUI): void {
-		const { width, height } = this.offset;
+		const { width, height } = g;
 		const background = this.disabled
 			? this.theme.control
 			: this.state.pressed
@@ -104,6 +118,13 @@ export class Checkbox extends Widget {
 		this.checked = checked;
 	}
 
+	protected override intrinsicSize() {
+		return {
+			width: CHECKBOX_SIZE + this.theme.padding + measureText(this.text, this.theme.fontSize),
+			height: Math.max(CHECKBOX_SIZE, this.theme.fontSize),
+		};
+	}
+
 	override activate(): void {
 		if (this.disabled) return;
 
@@ -116,7 +137,7 @@ export class Checkbox extends Widget {
 	}
 
 	override draw(g: DrawUI): void {
-		const { height } = this.offset;
+		const { height } = g;
 		const top = (height - CHECKBOX_SIZE) / 2;
 		const border = this.state.focused ? this.theme.focusRing : this.theme.panelBorder;
 
@@ -189,7 +210,7 @@ export class Slider extends Widget {
 	}
 
 	override draw(g: DrawUI): void {
-		const { width, height } = this.offset;
+		const { width, height } = g;
 		const trackTop = (height - SLIDER_TRACK_HEIGHT) / 2;
 
 		g.rect(0, trackTop, width, SLIDER_TRACK_HEIGHT, { color: this.theme.control });
@@ -248,7 +269,7 @@ export class TextInput extends Widget {
 	}
 
 	override draw(g: DrawUI): void {
-		const { width, height } = this.offset;
+		const { width, height } = g;
 		const border = this.state.focused ? this.theme.focusRing : this.theme.panelBorder;
 		const inset = this.theme.borderWidth;
 

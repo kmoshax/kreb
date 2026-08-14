@@ -116,8 +116,8 @@ test('the hash refuses a non-positive cell size', () => {
 
 test('onEnter fires once when contact begins, onExit when it ends', () => {
 	const root = new Node2D('root');
-	const player = new Recorder({ x: 10, y: 10 }, { layer: Layer.Player }, 'player');
-	const hazard = new BoxCollider2D({ x: 10, y: 10 }, { layer: Layer.Hazard }, 'hazard');
+	const player = new Recorder({ size: [10, 10], layer: Layer.Player, name: 'player' });
+	const hazard = new BoxCollider2D({ size: [10, 10], layer: Layer.Hazard, name: 'hazard' });
 
 	root.add(player);
 	root.add(hazard);
@@ -147,12 +147,18 @@ test('onEnter fires once when contact begins, onExit when it ends', () => {
 
 test('masks suppress callbacks for uninterested pairs', () => {
 	const root = new Node2D('root');
-	const player = new Recorder(
-		{ x: 10, y: 10 },
-		{ layer: Layer.Player, mask: Layer.Wall },
-		'player',
-	);
-	const hazard = new BoxCollider2D({ x: 10, y: 10 }, { layer: Layer.Hazard, mask: 0 }, 'hazard');
+	const player = new Recorder({
+		size: [10, 10],
+		layer: Layer.Player,
+		mask: Layer.Wall,
+		name: 'player',
+	});
+	const hazard = new BoxCollider2D({
+		size: [10, 10],
+		layer: Layer.Hazard,
+		mask: 0,
+		name: 'hazard',
+	});
 
 	root.add(player);
 	root.add(hazard);
@@ -166,7 +172,7 @@ test('masks suppress callbacks for uninterested pairs', () => {
 
 test('a collider inherits its parent transform', () => {
 	const parent = new Node2D('parent');
-	const box = new BoxCollider2D({ x: 2, y: 2 }, {}, 'box');
+	const box = new BoxCollider2D({ size: [2, 2], name: 'box' });
 	parent.add(box);
 
 	parent.position.set({ x: 50, y: 0 });
@@ -181,7 +187,7 @@ test('a collider inherits its parent transform', () => {
 
 test('a 3D collider picks up scale from the world matrix', () => {
 	const parent = new Node3D('parent');
-	const sphere = new SphereCollider3D(1, {}, 'sphere');
+	const sphere = new SphereCollider3D({ radius: 1, name: 'sphere' });
 	parent.add(sphere);
 
 	parent.scale.set({ x: 2, y: 2, z: 2 });
@@ -193,7 +199,7 @@ test('a 3D collider picks up scale from the world matrix', () => {
 
 test('overlap queries return an empty array, never null', () => {
 	const root = new Node2D('root');
-	const lonely = new CircleCollider2D(5, {}, 'lonely');
+	const lonely = new CircleCollider2D({ radius: 5, name: 'lonely' });
 	root.add(lonely);
 
 	const world = new CollisionWorld();
@@ -204,7 +210,7 @@ test('overlap queries return an empty array, never null', () => {
 
 test('overlapVolume finds colliders under a free-standing shape', () => {
 	const root = new Node2D('root');
-	const target = new CircleCollider2D(5, { layer: Layer.Hazard }, 'target');
+	const target = new CircleCollider2D({ radius: 5, layer: Layer.Hazard, name: 'target' });
 	root.add(target);
 	target.position.set({ x: 20, y: 0 });
 
@@ -221,8 +227,8 @@ test('overlapVolume finds colliders under a free-standing shape', () => {
 
 test('raycast returns the nearest hit and narrows on a discriminant', () => {
 	const root = new Node2D('root');
-	const near = new BoxCollider2D({ x: 2, y: 2 }, {}, 'near');
-	const far = new BoxCollider2D({ x: 2, y: 2 }, {}, 'far');
+	const near = new BoxCollider2D({ size: [2, 2], name: 'near' });
+	const far = new BoxCollider2D({ size: [2, 2], name: 'far' });
 
 	root.add(near);
 	root.add(far);
@@ -252,7 +258,7 @@ test('raycast misses report hit false rather than null', () => {
 
 test('a mask filters what a ray can hit', () => {
 	const root = new Node2D('root');
-	const wall = new BoxCollider2D({ x: 2, y: 2 }, { layer: Layer.Wall }, 'wall');
+	const wall = new BoxCollider2D({ size: [2, 2], layer: Layer.Wall, name: 'wall' });
 	root.add(wall);
 	wall.position.set({ x: 10, y: 0 });
 
@@ -265,8 +271,8 @@ test('a mask filters what a ray can hit', () => {
 
 test('2D and 3D colliders never collide with each other', () => {
 	const root = new Node3D('root');
-	const flat = new BoxCollider2D({ x: 10, y: 10 }, {}, 'flat');
-	const solid = new BoxCollider3D({ x: 10, y: 10, z: 10 }, {}, 'solid');
+	const flat = new BoxCollider2D({ size: [10, 10], name: 'flat' });
+	const solid = new BoxCollider3D({ size: [10, 10, 10], name: 'solid' });
 
 	root.add(flat);
 	root.add(solid);
@@ -282,7 +288,7 @@ test('2D and 3D colliders never collide with each other', () => {
 
 test('destroyed colliders leave the world', () => {
 	const root = new Node2D('root');
-	const box = new BoxCollider2D({ x: 4, y: 4 }, {}, 'box');
+	const box = new BoxCollider2D({ size: [4, 4], name: 'box' });
 	root.add(box);
 
 	const world = new CollisionWorld();
