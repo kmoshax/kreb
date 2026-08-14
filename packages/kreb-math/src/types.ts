@@ -4,8 +4,10 @@ export type Vector4 = { x: number; y: number; z: number; w: number };
 export type Quaternion = Vector4;
 
 /**
- * Sixteen floats in raylib's memory order, m0 through m15, so the array can be
- * handed to the binding layer without a conversion step.
+ * Index k holds raylib's field mK. raylib's struct declares its fields row by
+ * row (m0, m4, m8, m12, then m1, ...), so this is deliberately NOT the struct's
+ * memory order; it matches MatrixToFloatV and what a shader expects. Building a
+ * Matrix from a C brace-initializer transposes it.
  */
 export type Matrix = Float32Array;
 

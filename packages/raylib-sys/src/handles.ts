@@ -63,10 +63,8 @@ export abstract class Resource {
 		rl.free(pointer);
 	}
 
-	/**
-	 * Gives up ownership without unloading, for when raylib has handed the
-	 * underlying resource to another owner. Frees only this wrapper's heap copy.
-	 */
+	// For when raylib has handed the resource to another owner: frees this
+	// wrapper's heap copy but leaves the resource itself alone.
 	disown(): void {
 		const pointer = this.#pointer;
 		if (pointer === null) return;

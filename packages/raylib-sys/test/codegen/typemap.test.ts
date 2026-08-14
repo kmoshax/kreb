@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
-import { loadApi } from '../../tools/codegen/api.ts';
-import { planApi } from '../../tools/codegen/plan.ts';
-import { classify, HANDLE_STRUCTS, VALUE_STRUCTS } from '../../tools/codegen/typemap.ts';
+import { loadApi } from '@kreb/raylib-sys/codegen/api';
+import { planApi } from '@kreb/raylib-sys/codegen/plan';
+import { classify, HANDLE_STRUCTS, VALUE_STRUCTS } from '@kreb/raylib-sys/codegen/typemap';
 
 const api = await loadApi();
 const structNames = new Set(api.structs.map((s) => s.name));

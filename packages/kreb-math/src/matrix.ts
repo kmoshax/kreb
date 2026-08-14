@@ -11,11 +11,6 @@ import {
 	Vector3Subtract,
 } from './vector3.ts';
 
-/**
- * Index k holds raylib's field mK. raylib's struct declares its fields row by
- * row (m0, m4, m8, m12, then m1, ...), so this is deliberately not the struct's
- * memory order; it matches MatrixToFloatV and what a shader expects.
- */
 export function matrix(...values: number[]): Matrix {
 	return new Float32Array(values);
 }

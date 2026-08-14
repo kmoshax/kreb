@@ -9,9 +9,7 @@ export type Component = {
 export type ValueStruct = {
 	name: string;
 	components: Component[];
-	/** Builds a C initializer for the struct from the flattened parameter names. */
 	compose: (names: string[]) => string;
-	/** Reads the struct's components out into a float array. */
 	decompose: (value: string, out: string) => string;
 };
 
@@ -205,7 +203,6 @@ export function classify(rawType: string): TypeInfo {
 	return { kind: 'unsupported', reason: `unmapped type "${rawType}"` };
 }
 
-/** Return types that need a trailing out-pointer rather than a C return value. */
 export function needsOutParam(info: TypeInfo): boolean {
 	return info.kind === 'value' || info.kind === 'matrix';
 }

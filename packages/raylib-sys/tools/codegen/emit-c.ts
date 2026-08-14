@@ -47,7 +47,7 @@ function signature(fn: PlannedFunction): string {
 }
 
 function body(fn: PlannedFunction): string {
-	const args = fn.parameters.map((p) => p.argument).join(', ');
+	const args = fn.parameters.map((p) => p.callSiteArgument).join(', ');
 	const call = `${fn.name}(${args})`;
 
 	switch (fn.returnInfo.kind) {

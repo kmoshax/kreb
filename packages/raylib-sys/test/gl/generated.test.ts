@@ -1,6 +1,3 @@
-// Phase 3's completion criterion: generated bindings clear the same bar the
-// hand-written phase 2 shim did.
-//
 // The generated module calls loadShim at import time, so the shim is built
 // first and the module imported dynamically.
 
@@ -74,8 +71,6 @@ test('a heap handle round-trips through alloc, use, and free', () => {
 	expect(camera).not.toBeNull();
 	if (camera === null) throw new Error('allocation failed');
 
-	// Zero-initialised camera has zoom 0, which collapses everything to the
-	// offset; set a real zoom through the raw struct write path instead.
 	const screen = rl.GetWorldToScreen2D(10, 20, camera);
 
 	expect(screen).toBeInstanceOf(Float32Array);

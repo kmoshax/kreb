@@ -281,13 +281,17 @@ const state = kreb.fsm({
 })
 ```
 
-**Math** is `raymath` reimplemented in pure TypeScript — vectors, matrices, and quaternions. This avoids an FFI crossing per call and is strictly faster than binding header-only inline C.
+**Math** ships as its own package, `@kreb/math` — `raymath` reimplemented in pure TypeScript covering vectors, matrices, and quaternions. This avoids an FFI crossing per call and is strictly faster than binding header-only inline C. It is separate rather than a framework folder because it has no native dependency at all: no shim, no raylib download, no GPU. That makes it independently testable and usable on its own.
 
 ## Package layout
 
 ```
 packages/raylib-sys/     private, never published, no public entrypoint
                          (see the binding layer design document)
+
+packages/kreb-math/      @kreb/math — raymath port, pure TypeScript, no native
+                         dependency, so it stands alone and is usable without
+                         a window or a GPU
 
 packages/kreb/           public
   src/core/              loop, Node, Node2D, Node3D, NodeUI, transforms, render passes
@@ -298,12 +302,11 @@ packages/kreb/           public
   src/collision/         shapes, spatial hash, queries, layers
   src/ui/                widgets, anchor layout, focus
   src/extras/            tweens, timers, particles, FSM
-  src/math/              raymath port
   src/cli/               new, dev, build, ship
   bin/kreb
 ```
 
-Bun workspaces, two packages. The split exists because the binding has a genuinely different build story — codegen, native source, a postinstall downloader, a platform matrix — and folding that into the framework's test loop would slow down every framework change.
+Bun workspaces. The raylib split exists because the binding has a genuinely different build story — codegen, native source, a postinstall downloader, a platform matrix — and folding that into the framework's test loop would slow down every framework change.
 
 ## Testing
 

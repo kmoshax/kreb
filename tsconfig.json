@@ -11,6 +11,17 @@
 
 		// Bundler mode
 		"moduleResolution": "bundler",
+		"paths": {
+			"@kreb/math": ["./packages/kreb-math/src/index.ts"],
+			"@kreb/math/*": ["./packages/kreb-math/src/*.ts"],
+			"@kreb/raylib-sys": ["./packages/raylib-sys/src/index.ts"],
+			"@kreb/raylib-sys/build": ["./packages/raylib-sys/scripts/build-shim.ts"],
+			"@kreb/raylib-sys/codegen/*": ["./packages/raylib-sys/tools/codegen/*.ts"],
+			"@kreb/raylib-sys/raylib": ["./packages/raylib-sys/src/generated/raylib.ts"],
+			"@kreb/raylib-sys/colors": ["./packages/raylib-sys/src/generated/colors.ts"],
+			"@kreb/raylib-sys/enums": ["./packages/raylib-sys/src/generated/enums.ts"],
+			"@kreb/raylib-sys/*": ["./packages/raylib-sys/src/*.ts"]
+		},
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,
 		"noEmit": true,

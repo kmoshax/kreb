@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
-import type { ApiFunction } from '../../tools/codegen/api.ts';
-import { emitC } from '../../tools/codegen/emit-c.ts';
-import { emitBindings, emitColors, emitEnums } from '../../tools/codegen/emit-ts.ts';
-import { planApi } from '../../tools/codegen/plan.ts';
+import type { ApiFunction } from '@kreb/raylib-sys/codegen/api';
+import { emitC } from '@kreb/raylib-sys/codegen/emit-c';
+import { emitBindings, emitColors, emitEnums } from '@kreb/raylib-sys/codegen/emit-ts';
+import { planApi } from '@kreb/raylib-sys/codegen/plan';
 
 function generate(functions: ApiFunction[]) {
 	const plan = planApi(functions);

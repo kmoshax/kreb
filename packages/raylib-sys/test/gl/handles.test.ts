@@ -100,7 +100,6 @@ test('a mesh becomes a model that draws', () => {
 	using model = h.Model.fromMesh(mesh);
 	expect(model.meshCount).toBe(1);
 
-	// The model owns the mesh now, so the wrapper reports itself as released.
 	expect(mesh.disposed).toBe(true);
 
 	rl.BeginDrawing();

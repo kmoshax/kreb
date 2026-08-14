@@ -1,5 +1,4 @@
 // Manual check: bun packages/raylib-sys/examples/window.ts
-// Opens a real window, bounces a circle, closes on Escape.
 
 import { buildShim } from '../scripts/build-shim.ts';
 

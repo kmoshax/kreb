@@ -1,14 +1,12 @@
-// The TypeScript raymath port checked against raylib's own inline C.
-//
 // Tolerance is loose because raymath computes in float while JavaScript computes
 // in double; the port is expected to match to single-precision, not bit-exactly.
 
 import { type FFIFunction, ptr } from 'bun:ffi';
 import { beforeAll, expect, test } from 'bun:test';
-import { buildShim } from '../../raylib-sys/scripts/build-shim.ts';
-import { loadShim } from '../../raylib-sys/src/loader.ts';
-import * as km from '../src/math/index.ts';
-import type { Matrix, Quaternion, Vector2, Vector3 } from '../src/math/types.ts';
+import * as km from '@kreb/math';
+import type { Matrix, Quaternion, Vector2, Vector3 } from '@kreb/math/types';
+import { buildShim } from '@kreb/raylib-sys/build';
+import { loadShim } from '@kreb/raylib-sys/loader';
 
 const f = 'f32';
 const p = 'ptr';

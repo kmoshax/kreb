@@ -130,7 +130,7 @@ Rules:
 
 - **rlgl.** Its only purpose is exposing low-level rendering to end users. With no escape hatch it has no consumer except the framework's own internals, which do not currently need it. Bind it if and when a framework feature requires it.
 - **raygui.** The framework draws its UI natively. Binding raygui would also require TinyCC to compile roughly 5000 lines of `RAYGUI_IMPLEMENTATION`, which is a far larger compile surface than the shim and the largest single source of TinyCC risk.
-- **raymath.** It is header-only inline C. It is reimplemented in pure TypeScript in the framework package, which avoids an FFI crossing per call and is strictly faster than binding it.
+- **raymath.** It is header-only inline C. It is reimplemented in pure TypeScript in `packages/kreb-math`, which avoids an FFI crossing per call and is strictly faster than binding it. `native/raymath_probe.c` exposes the C originals to that package's parity tests and is test-only.
 
 ## Package layout
 

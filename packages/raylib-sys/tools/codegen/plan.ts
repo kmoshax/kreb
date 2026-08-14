@@ -4,10 +4,8 @@ import { type Component, classify, needsOutParam, type TypeInfo } from './typema
 export type PlannedParam = {
 	name: string;
 	info: TypeInfo;
-	/** Flattened C parameters this one expands into. */
 	flat: { name: string; c: string; ffi: string }[];
-	/** Expression reconstructing the original C argument at the call site. */
-	argument: string;
+	callSiteArgument: string;
 };
 
 export type PlannedFunction = {
@@ -40,17 +38,22 @@ function planParam(name: string, rawType: string): PlannedParam | { error: strin
 
 	switch (info.kind) {
 		case 'scalar':
-			return { name, info, flat: [{ name, c: info.c, ffi: info.ffi }], argument: name };
+			return { name, info, flat: [{ name, c: info.c, ffi: info.ffi }], callSiteArgument: name };
 
 		case 'cstring':
-			return { name, info, flat: [{ name, c: 'const char *', ffi: 'cstring' }], argument: name };
+			return {
+				name,
+				info,
+				flat: [{ name, c: 'const char *', ffi: 'cstring' }],
+				callSiteArgument: name,
+			};
 
 		case 'color':
 			return {
 				name,
 				info,
 				flat: [{ name, c: 'uint32_t', ffi: 'u32' }],
-				argument: `kreb_color_from_rgba(${name})`,
+				callSiteArgument: `kreb_color_from_rgba(${name})`,
 			};
 
 		case 'matrix':
@@ -58,7 +61,7 @@ function planParam(name: string, rawType: string): PlannedParam | { error: strin
 				name,
 				info,
 				flat: [{ name, c: 'const float *', ffi: 'ptr' }],
-				argument: `kreb_matrix_from_floats(${name})`,
+				callSiteArgument: `kreb_matrix_from_floats(${name})`,
 			};
 
 		case 'value': {
@@ -71,7 +74,7 @@ function planParam(name: string, rawType: string): PlannedParam | { error: strin
 				name,
 				info,
 				flat,
-				argument: info.struct.compose(flat.map((f) => f.name)),
+				callSiteArgument: info.struct.compose(flat.map((f) => f.name)),
 			};
 		}
 
@@ -80,7 +83,7 @@ function planParam(name: string, rawType: string): PlannedParam | { error: strin
 				name,
 				info,
 				flat: [{ name, c: 'void *', ffi: 'ptr' }],
-				argument: `*(${info.struct} *)${name}`,
+				callSiteArgument: `*(${info.struct} *)${name}`,
 			};
 
 		case 'pointer':
@@ -88,7 +91,7 @@ function planParam(name: string, rawType: string): PlannedParam | { error: strin
 				name,
 				info,
 				flat: [{ name, c: 'void *', ffi: 'ptr' }],
-				argument: `(${info.c})${name}`,
+				callSiteArgument: `(${info.c})${name}`,
 			};
 
 		case 'callback':
@@ -96,7 +99,7 @@ function planParam(name: string, rawType: string): PlannedParam | { error: strin
 				name,
 				info,
 				flat: [{ name, c: 'void *', ffi: 'ptr' }],
-				argument: `(${info.c})${name}`,
+				callSiteArgument: `(${info.c})${name}`,
 			};
 
 		case 'void':

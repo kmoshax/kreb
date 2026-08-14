@@ -4,8 +4,14 @@
 	"private": true,
 	"type": "module",
 	"exports": {
+		".": "./src/index.ts",
 		"./loader": "./src/loader.ts",
-		"./raylib-path": "./src/raylib-path.ts"
+		"./handles": "./src/handles.ts",
+		"./raylib": "./src/generated/raylib.ts",
+		"./colors": "./src/generated/colors.ts",
+		"./enums": "./src/generated/enums.ts",
+		"./build": "./scripts/build-shim.ts",
+		"./codegen/*": "./tools/codegen/*.ts"
 	},
 	"scripts": {
 		"postinstall": "bun scripts/postinstall.ts",
